@@ -15,6 +15,7 @@ import com.arquitectura.dto.events.NewChannelEvent;
 import com.arquitectura.dto.events.NewMessageEvent;
 import com.arquitectura.dto.events.UserListUpdateEvent;
 import com.arquitectura.entidades.Message;
+import com.arquitectura.logica.SendMessageRequestFactory.MessageType;
 import com.arquitectura.logica.ports.INetworkInputPort;
 import com.arquitectura.logica.ports.INetworkOutputPort;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,8 +109,14 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
 
     @Override
     public void enviarMensajeTexto(int channelId, String content) {
-        SendMessageRequestDto requestDto = new SendMessageRequestDto(channelId, "TEXT", content);
+        SendMessageRequestDto requestDto = SendMessageRequestFactory.createRequest(channelId, MessageType.TEXT, content);
         networkOutputPort.enviarSolicitudMensajeTexto(requestDto);
+    }
+
+    @Override
+    public void enviarMensajeAudio(int channelId, String filePath) {
+        SendMessageRequestDto requestDto = SendMessageRequestFactory.createRequest(channelId, MessageType.AUDIO, filePath);
+        networkOutputPort.enviarSolicitudMensajeAudio(requestDto);
     }
    @Override
 public void procesarMensajeRecibido(Message message) {
@@ -134,11 +141,7 @@ public void procesarMensajeRecibido(Message message) {
 public void procesarMensajeRecibido(MessageViewDTO message) {
     eventPublisher.publishEvent(new NewMessageEvent(this, message));
 }
-@Override
-    public void enviarMensajeAudio(int channelId, String filePath) {
-        SendMessageRequestDto requestDto = new SendMessageRequestDto(channelId, "AUDIO", filePath);
-        networkOutputPort.enviarSolicitudMensajeAudio(requestDto);
-    }
+
     @Override
     public void solicitarChatDirecto(String username) {
         networkOutputPort.enviarSolicitudChatDirecto(username);

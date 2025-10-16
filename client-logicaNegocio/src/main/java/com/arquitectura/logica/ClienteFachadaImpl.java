@@ -43,7 +43,6 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
     @Override
     public void login(String username, String password) {
         // Store the user details temporarily to be saved on successful login
-        this.currentUser = new User(0, username); // ID will be updated on success
         UserDTO userDTO = new UserDTO(username, password);
         networkOutputPort.enviarSolicitudLogin(userDTO);
     }
@@ -77,7 +76,8 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
     }
     // --- MÉTODOS DE INetworkInputPort (Llamadas desde el ServerListener) ---
     @Override
-    public void procesarLoginExitoso() {
+    public void procesarLoginExitoso(int userId, String username) {
+        this.currentUser = new User(userId, username);
         eventPublisher.publishEvent(new LoginSuccessEvent(this));
     }
 
@@ -162,8 +162,8 @@ public void procesarMensajeRecibido(Message message) {
     public void procesarMensajeRecibido(MessageViewDTO message) {
         // 3. Save the received message to the local database
         if (currentUser != null) {
-            boolean isOwnMessage = currentUser.getUsername().equals(message.getAuthorName());
-            User author = new User(0, message.getAuthorName()); // Create a temporary author entity
+            boolean isOwnMessage = currentUser.getId() == message.getAuthor().getId();
+            User author = new User(message.getAuthor().getId(), message.getAuthor().getUsername()); // Create a temporary author entity
             
             messageService.guardarMensajeTexto(message.getContent(), author, isOwnMessage);
         }

@@ -52,14 +52,18 @@ public class ServerListener implements Runnable {
     private void parseAndDelegate(String response) {
         if (networkInputPort == null) return;
 
-        String[] parts = response.split(";", 3);
+        String[] parts = response.split(";", 4);
         String status = parts[0].toUpperCase();
         String command = (parts.length > 1) ? parts[1].toUpperCase() : "";
 
         if ("OK".equals(status)) {
             switch (command) {
                 case "LOGIN_SUCCESS":
-                    networkInputPort.procesarLoginExitoso();
+                    if (parts.length >= 4) {
+                        int userId = Integer.parseInt(parts[2]);
+                        String username = parts[3];
+                        networkInputPort.procesarLoginExitoso(userId, username);
+                    }
                     break;
                 case "OBTENER_USUARIOS":
                     String jsonUsuarios = (parts.length > 2) ? parts[2] : "[]";

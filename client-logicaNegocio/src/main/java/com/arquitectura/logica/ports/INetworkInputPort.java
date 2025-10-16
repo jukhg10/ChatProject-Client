@@ -19,6 +19,6 @@ public interface INetworkInputPort {
     void procesarMensajeRecibido(MessageViewDTO message);
     void procesarListaDeInvitaciones(List<ChannelViewDTO> invitaciones);
     // Métodos para el flujo de login
-    void procesarLoginExitoso();
+    void procesarLoginExitoso(int userId, String username);
     void procesarFalloDeLogin(String mensajeError);
 }

@@ -1,6 +1,6 @@
 package com.arquitectura.controller;
 
-import com.arquitectura.dto.MessageViewDTO; // Importa desde el paquete DTO
+import com.arquitectura.dto.MessageViewDTO;
 import com.arquitectura.logica.IClienteFachada;
 import org.springframework.stereotype.Controller;
 
@@ -14,7 +14,7 @@ public class ChatController {
     }
 
     public void sendMessage(int channelId, String content) {
-        clienteFachada.sendMessage(channelId, content);
+        clienteFachada.enviarMensajeTexto(channelId, content);
     }
 
     /**

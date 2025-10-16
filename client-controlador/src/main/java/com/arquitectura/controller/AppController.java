@@ -2,7 +2,7 @@ package com.arquitectura.controller;
 
 import com.arquitectura.dto.events.LoginSuccessEvent;
 import com.arquitectura.logica.IClienteFachada;
-import com.arquitectura.logica.ports.INetworkInputPort; // <-- THIS IMPORT WAS MISSING
+import com.arquitectura.logica.ports.INetworkInputPort;
 import com.arquitectura.net.ServerListener;
 import com.arquitectura.transporte.ServerConnection;
 import javafx.application.Platform;
@@ -43,10 +43,8 @@ public class AppController {
     }
 
     public void connectAndLogin(String username, String password) throws Exception {
-        // Establecemos la conexión usando los valores inyectados desde el properties
         serverConnection.connect(serverIp, serverPort);
         
-        // El resto de la lógica para iniciar el listener y hacer login
         ServerListener listener = springContext.getBean(ServerListener.class);
         listener.setInputStream(serverConnection.getInputStream());
         listener.setNetworkInputPort((INetworkInputPort) fachada);
@@ -63,9 +61,11 @@ public class AppController {
             fachada.solicitarListaCanales();
         });
     }
+
     public void solicitarListaCanales() {
         fachada.solicitarListaCanales();
     }
+
     public void showMainWindow() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/MainWindow.fxml"));
@@ -78,24 +78,25 @@ public class AppController {
             e.printStackTrace();
         }
     }
-    public void iniciarChatDirecto(String username) {
-    System.out.println("CONTROLADOR: Solicitando chat directo con '" + username + "'");
-    fachada.solicitarChatDirecto(username);
-}
-    public void crearCanalGrupo(String channelName, List<String> invitedUsers) {
+
+    public void iniciarChatDirecto(int otherUserId) {
+        System.out.println("CONTROLADOR: Solicitando chat directo con ID '" + otherUserId + "'");
+        fachada.crearCanalDirecto(otherUserId);
+    }
+
+    public void crearCanal(String channelName) {
         System.out.println("CONTROLADOR: Solicitando crear canal '" + channelName + "'");
-        fachada.crearCanalGrupo(channelName);
+        fachada.crearCanal(channelName);
     }
     
-    public void sendMessage(int channelId, String content) {
-        fachada.sendMessage(channelId, content);
-    }
     public void enviarMensaje(int channelId, String content) {
-    fachada.enviarMensajeTexto(channelId, content);
+        fachada.enviarMensajeTexto(channelId, content);
     }
+
     public void solicitarHistorialMensajes(int channelId) {
         fachada.solicitarHistorialMensajes(channelId);
     }
+
     public void solicitarInvitaciones() {
         fachada.solicitarInvitaciones();
     }
@@ -103,11 +104,13 @@ public class AppController {
     public void responderInvitacion(int channelId, boolean aceptada) {
         fachada.responderInvitacion(channelId, aceptada);
     }
+
     public void enviarMensajeAudio(int channelId, String filePath) {
-    fachada.enviarMensajeAudio(channelId, filePath);
-}
+        fachada.enviarMensajeAudio(channelId, filePath);
+    }
+
     public void disconnectFromServer() throws Exception {
+        fachada.logout();
         serverConnection.disconnect();
     }
-    
 }

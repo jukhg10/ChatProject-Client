@@ -1,42 +1,57 @@
 package com.arquitectura.vistas;
 
 import com.arquitectura.controller.AppController;
+import com.arquitectura.dto.UserViewDTO;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public class SearchUserController {
 
     @FXML
-    private TextField usernameField;
+    private ListView<String> userListView;
     @FXML
-    private Button searchButton;
-    @FXML
-    private Label errorLabel;
+    private Button startChatButton;
 
     private final AppController appController;
+    private List<UserViewDTO> userList; // Store the full user list
 
     public SearchUserController(AppController appController) {
         this.appController = appController;
     }
 
+    public void setUsers(List<UserViewDTO> users) {
+        this.userList = users;
+        userListView.setItems(FXCollections.observableArrayList(
+                users.stream().map(UserViewDTO::getUsername).toList()
+        ));
+    }
+
     @FXML
-    private void handleSearchAction() {
-        String username = usernameField.getText();
-        if (username == null || username.trim().isEmpty()) {
-            errorLabel.setText("El nombre de usuario no puede estar vacío.");
-            return;
+    private void handleStartChatButtonAction() {
+        String selectedUsername = userListView.getSelectionModel().getSelectedItem();
+        if (selectedUsername != null) {
+            // Find the user ID corresponding to the selected username
+            Optional<UserViewDTO> selectedUser = userList.stream()
+                    .filter(user -> user.getUsername().equals(selectedUsername))
+                    .findFirst();
+
+            selectedUser.ifPresent(userViewDTO -> {
+                appController.iniciarChatDirecto(userViewDTO.getId());
+                closeWindow();
+            });
         }
+    }
 
-        // Llama al AppController para que gestione la creación del chat directo
-        appController.iniciarChatDirecto(username);
-
-        // Cierra la ventana de búsqueda
-        Stage stage = (Stage) searchButton.getScene().getWindow();
+    private void closeWindow() {
+        Stage stage = (Stage) startChatButton.getScene().getWindow();
         stage.close();
     }
 }

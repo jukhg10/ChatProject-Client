@@ -56,7 +56,7 @@ public class ServerConnection implements INetworkOutputPort {
     public void enviarSolicitudListaCanales() {
         // Asumimos que el servidor entenderá este comando.
         // Si el comando es diferente, solo necesitas cambiar este string.
-        sendMessage("OBTENER_CANALES");
+        sendMessage("OBTENER_MIS_CANALES");
     }
     @Override
     public void enviarSolicitudMensaje(MessageDTO message) {

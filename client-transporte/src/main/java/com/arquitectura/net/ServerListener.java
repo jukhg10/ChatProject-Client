@@ -61,13 +61,6 @@ public class ServerListener implements Runnable {
                 case "LOGIN_SUCCESS":
                     networkInputPort.procesarLoginExitoso();
                     break;
-                case "NUEVO_MENSAJE":
-                String jsonData = (parts.length > 2) ? parts[2] : "{}"; // Extract the JSON data from the parts array
-                MessageViewDTO newMessage = gson.fromJson(jsonData, MessageViewDTO.class);
-                if (newMessage != null) {
-                    networkInputPort.procesarMensajeRecibido(newMessage);
-                }
-                break;
                 case "OBTENER_USUARIOS":
                     String jsonUsuarios = (parts.length > 2) ? parts[2] : "[]";
                     Type userListType = new TypeToken<ArrayList<UserViewDTO>>(){}.getType();
@@ -82,7 +75,7 @@ public class ServerListener implements Runnable {
                     networkInputPort.procesarListaDeInvitaciones(invitaciones);
                     break;
                     
-                case "OBTENER_CANALES":
+                case "OBTENER_MIS_CANALES":
                     String jsonCanales = (parts.length > 2) ? parts[2] : "[]";
                     Type channelListType = new TypeToken<ArrayList<ChannelViewDTO>>(){}.getType();
                     List<ChannelViewDTO> channels = gson.fromJson(jsonCanales, channelListType);
@@ -121,7 +114,27 @@ public class ServerListener implements Runnable {
                 default:
                     System.out.println("Comando exitoso desconocido: " + command);
             }
-        } else if ("ERROR".equals(status)) {
+        } else if ("EVENTO".equals(status)) {
+             String eventType = (parts.length > 1) ? parts[1].toUpperCase() : "";
+             switch(eventType) {
+                case "NUEVO_MENSAJE":
+                    String jsonData = (parts.length > 2) ? parts[2] : "{}"; // Extract the JSON data from the parts array
+                    MessageViewDTO newMessage = gson.fromJson(jsonData, MessageViewDTO.class);
+                    if (newMessage != null) {
+                        networkInputPort.procesarMensajeRecibido(newMessage);
+                    }
+                    break;
+                case "NUEVA_INVITACION":
+                    String jsonInvitacion = (parts.length > 2) ? parts[2] : "{}";
+                    ChannelViewDTO newInvitation = gson.fromJson(jsonInvitacion, ChannelViewDTO.class);
+                    if (newInvitation != null) {
+                        // We can reuse the channel list update logic for a single new channel
+                        networkInputPort.procesarListaDeInvitaciones(new ArrayList<>(List.of(newInvitation)));
+                    }
+                    break;
+
+             }
+        }else if ("ERROR".equals(status)) {
             String errorMessage = (parts.length > 2) ? parts[2] : "Error desconocido del servidor.";
             networkInputPort.procesarFalloDeLogin(errorMessage);
         }

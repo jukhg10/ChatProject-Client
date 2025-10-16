@@ -17,6 +17,16 @@ public interface IMessageService {
     Message guardarMensajeTexto(String content, User author, boolean isOwnMessage);
 
     /**
+     * Saves a new audio message to the local database.
+     * @param audioUrl The path or URL to the audio file.
+     * @param author The user who sent the message.
+     * @param isOwnMessage True if the current user sent the message.
+     * @return The saved message entity.
+     */
+    Message guardarMensajeAudio(String audioUrl, User author, boolean isOwnMessage);
+
+
+    /**
      * Retrieves all messages for a specific user from the local database.
      * @param userId The ID of the user whose messages we want to retrieve.
      * @return A list of messages.

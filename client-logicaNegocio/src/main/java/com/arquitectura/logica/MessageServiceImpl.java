@@ -1,6 +1,7 @@
 package com.arquitectura.logica;
 
 import com.arquitectura.entidades.Message;
+import com.arquitectura.entidades.AudioMessage;
 import com.arquitectura.entidades.TextMessage;
 import com.arquitectura.entidades.User;
 import com.arquitectura.persistence.MessageRepository;
@@ -39,6 +40,21 @@ public class MessageServiceImpl implements IMessageService {
         return MessageMapper.toDomain(savedEntity);
     }
 
+    @Override
+    @Transactional
+    public Message guardarMensajeAudio(String audioUrl, User author, boolean isOwnMessage) {
+        // 1. Create the pure domain object for an audio message
+        AudioMessage domainMessage = new AudioMessage(author, isOwnMessage, audioUrl);
+
+        // 2. Map to a persistence entity
+        MessageEntity entityToSave = MessageMapper.toEntity(domainMessage);
+
+        // 3. Save using the repository
+        MessageEntity savedEntity = messageRepository.save(entityToSave);
+
+        // 4. Map back to a domain object and return
+        return MessageMapper.toDomain(savedEntity);
+    }
     @Override
     @Transactional(readOnly = true)
     public List<Message> obtenerHistorialDeMensajes(int userId) {

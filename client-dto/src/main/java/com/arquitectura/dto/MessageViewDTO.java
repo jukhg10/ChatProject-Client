@@ -2,31 +2,35 @@ package com.arquitectura.dto;
 
 import java.time.LocalDateTime;
 
-/**
- * DTO para transportar la información de un mensaje a la capa de vista.
- */
 public class MessageViewDTO {
     private final int id;
     private final String content;
-    private final String authorName;
+    // This is the critical change
+    private final UserViewDTO author; 
     private final LocalDateTime timestamp;
     private final boolean isOwnMessage;
-    private final int channelId; // Add this field
+    private final int channelId;
 
-    public MessageViewDTO(int id, String content, String authorName, LocalDateTime timestamp, boolean isOwnMessage, int channelId) {
+    public MessageViewDTO(int id, String content, UserViewDTO author, LocalDateTime timestamp, boolean isOwnMessage, int channelId) {
         this.id = id;
         this.content = content;
-        this.authorName = authorName;
+        this.author = author;
         this.timestamp = timestamp;
         this.isOwnMessage = isOwnMessage;
-        this.channelId = channelId; // Add this to the constructor
+        this.channelId = channelId;
     }
 
     // Getters
     public int getId() { return id; }
     public String getContent() { return content; }
-    public String getAuthorName() { return authorName; }
+    // Update the getter
+    public UserViewDTO getAuthor() { return author; } 
     public LocalDateTime getTimestamp() { return timestamp; }
     public boolean isOwnMessage() { return isOwnMessage; }
-    public int getChannelId() { return channelId; } // Add this getter
+    public int getChannelId() { return channelId; }
+    
+    // You'll now get the name like this: getAuthor().getUsername()
+    public String getAuthorName() {
+        return author != null ? author.getUsername() : "Unknown";
+    }
 }

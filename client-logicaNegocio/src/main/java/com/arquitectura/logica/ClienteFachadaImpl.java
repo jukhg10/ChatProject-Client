@@ -135,18 +135,23 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
         networkOutputPort.enviarSolicitudMensajeAudio(requestDto);
     }
    @Override
-    public void procesarMensajeRecibido(Message message) {
-        // This is a simplified conversion. You might need to adjust it based on your object structure.
-        MessageViewDTO messageDTO = new MessageViewDTO(
-            message.getId(),
-            ((com.arquitectura.entidades.TextMessage) message).getContent(), // Assuming it's a TextMessage
-            message.getAuthor().getUsername(),
-            message.getTimestamp(),
-            message.isOwnMessage(),
-            0 // Placeholder for channelId, as it's not in the Message entity
-        );
-        eventPublisher.publishEvent(new NewMessageEvent(this, messageDTO));
-    }
+public void procesarMensajeRecibido(Message message) {
+    // This is a simplified conversion. You might need to adjust it based on your object structure.
+    
+    // Create the author DTO that the MessageViewDTO constructor now expects
+    User authorEntity = message.getAuthor();
+    UserViewDTO authorDto = new UserViewDTO(authorEntity.getId(), authorEntity.getUsername());
+
+    MessageViewDTO messageDTO = new MessageViewDTO(
+        message.getId(),
+        ((com.arquitectura.entidades.TextMessage) message).getContent(), // Assuming it's a TextMessage
+        authorDto, // Pass the newly created author DTO
+        message.getTimestamp(),
+        message.isOwnMessage(),
+        0 // Placeholder for channelId, as it's not in the Message entity
+    );
+    eventPublisher.publishEvent(new NewMessageEvent(this, messageDTO));
+}
 @Override
     public void procesarListaDeInvitaciones(List<ChannelViewDTO> invitaciones) {
         // Cuando la red nos da la lista de invitaciones, publicamos un evento

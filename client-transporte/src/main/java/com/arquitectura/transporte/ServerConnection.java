@@ -1,11 +1,9 @@
 package com.arquitectura.transporte;
 
 import com.arquitectura.dto.SendMessageRequestDto;
-import com.arquitectura.dto.MessageDTO;
 import com.arquitectura.dto.UserDTO;
 import com.arquitectura.logica.ports.INetworkOutputPort;
 import org.springframework.stereotype.Component;
-import com.arquitectura.dto.SendMessageRequestDto;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,14 +20,12 @@ public class ServerConnection implements INetworkOutputPort {
     public ServerConnection() {}
 
     public void connect(String serverAddress, int port) throws IOException {
-        // Establecemos un tiempo de espera de 5 segundos para la conexión
         socket = new Socket(serverAddress, port);
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         System.out.println("Conectado al servidor en " + serverAddress + ":" + port);
     }
     
-    // Este método es clave: devuelve el BufferedReader para que el ServerListener pueda leerlo.
     public BufferedReader getInputStream() {
         return in;
     }
@@ -40,39 +36,36 @@ public class ServerConnection implements INetworkOutputPort {
         }
     }
 
-    // --- Implementación de INetworkOutputPort ---
-
     @Override
     public void enviarSolicitudLogin(UserDTO user) {
-        // Formateamos el mensaje según el protocolo definido en el servidor.
         sendMessage("LOGIN;" + user.getUsername() + ";" + user.getPassword());
+    }
+
+    @Override
+    public void enviarSolicitudLogout() {
+        sendMessage("LOGOUT");
     }
 
     @Override
     public void enviarSolicitudListaUsuarios() {
         sendMessage("OBTENER_USUARIOS");
     }
+
     @Override
     public void enviarSolicitudListaCanales() {
-        // Asumimos que el servidor entenderá este comando.
-        // Si el comando es diferente, solo necesitas cambiar este string.
         sendMessage("OBTENER_MIS_CANALES");
     }
+
     @Override
-    public void enviarSolicitudMensaje(MessageDTO message) {
-        sendMessage("MSG;" + message.getChannelId() + ";" + message.getContent());
-    }
-    @Override
-    public void enviarSolicitudCrearCanal(String channelName) {
-        // Formato del mensaje según el RequestDispatcher del servidor
+    public void enviarSolicitudCrearCanalGrupo(String channelName) {
         sendMessage("CREAR_CANAL_GRUPO;" + channelName);
     }
+
     @Override
-    public void enviarSolicitudChatDirecto(String username) {
-        // Este comando es hipotético. Deberás asegurarte de que el servidor
-        // tenga una lógica para manejar "CREAR_CANAL_DIRECTO" o un comando similar.
-        sendMessage("CREAR_CANAL_DIRECTO;" + username);
+    public void enviarSolicitudCrearCanalDirecto(int otherUserId) {
+        sendMessage("CREAR_CANAL_DIRECTO;" + otherUserId);
     }
+
     @Override
     public void enviarSolicitudHistorial(int channelId) {
         sendMessage("GET_HISTORY;" + channelId);
@@ -82,6 +75,11 @@ public class ServerConnection implements INetworkOutputPort {
     public void enviarSolicitudMensajeTexto(SendMessageRequestDto requestDto) {
         sendMessage("ENVIAR_MENSAJE_TEXTO;" + requestDto.getChannelId() + ";" + requestDto.getContent());
     }   
+
+    @Override
+    public void enviarSolicitudInvitarUsuario(int channelId, int userIdToInvite) {
+        sendMessage("INVITAR_USUARIO;" + channelId + ";" + userIdToInvite);
+    }
 
     @Override
     public void enviarSolicitudInvitaciones() {
@@ -99,6 +97,11 @@ public class ServerConnection implements INetworkOutputPort {
         sendMessage("ENVIAR_MENSAJE_AUDIO;" + requestDto.getChannelId() + ";" + requestDto.getContent());
     }
     
+    @Override
+    public void enviarSolicitudDescargarArchivo(String relativePath) {
+        sendMessage("DESCARGAR_ARCHIVO;" + relativePath);
+    }
+
     public void disconnect() throws IOException {
         if (socket != null && !socket.isClosed()) {
             in.close();

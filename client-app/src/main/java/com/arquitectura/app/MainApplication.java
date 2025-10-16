@@ -10,27 +10,41 @@ import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+// Importa las clases List y ArrayList
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainApplication extends Application {
 
     private ConfigurableApplicationContext springContext;
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
-        // Inicia el contexto de Spring aquí, dentro del hilo de JavaFX
-        springContext = new SpringApplicationBuilder(SpringApp.class).run();
-        
-        // El resto del código para mostrar la ventana
-        AppController appController = springContext.getBean(AppController.class);
-        appController.setPrimaryStage(primaryStage);
+public void start(Stage primaryStage) throws Exception {
+    // Get the original application arguments
+    List<String> rawParams = getParameters().getRaw();
 
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/Login.fxml"));
-        fxmlLoader.setControllerFactory(springContext::getBean);
-        Parent root = fxmlLoader.load();
-        
-        primaryStage.setTitle("Chat - Iniciar Sesión");
-        primaryStage.setScene(new Scene(root));
-        primaryStage.show();
-    }
+    // Create a new list of arguments for Spring
+    List<String> springArgs = new ArrayList<>(rawParams);
+    
+    // Add the location of the configuration file as a command-line argument
+    springArgs.add("--spring.config.location=file:./application.properties");
+
+    // Start the Spring application with the new arguments
+    springContext = new SpringApplicationBuilder(SpringApp.class)
+            .run(springArgs.toArray(new String[0]));
+
+    // The rest of your code remains the same
+    AppController appController = springContext.getBean(AppController.class);
+    appController.setPrimaryStage(primaryStage);
+
+    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/Login.fxml"));
+    fxmlLoader.setControllerFactory(springContext::getBean);
+    Parent root = fxmlLoader.load();
+    
+    primaryStage.setTitle("Chat - Iniciar Sesión");
+    primaryStage.setScene(new Scene(root));
+    primaryStage.show();
+}
 
     @Override
     public void stop() {
@@ -40,7 +54,6 @@ public class MainApplication extends Application {
         Platform.exit();
     }
     
-    // Este método es llamado por la clase Launcher
     public static void main(String[] args) {
         launch(args);
     }

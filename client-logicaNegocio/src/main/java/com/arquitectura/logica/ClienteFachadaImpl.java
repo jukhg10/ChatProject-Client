@@ -39,20 +39,15 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
         this.messageService = messageService; 
     }
 
-    // --- MÉTODOS DE IClienteFachada (Llamadas desde el Controlador) ---
     @Override
     public void login(String username, String password) {
-        // Store the user details temporarily to be saved on successful login
         UserDTO userDTO = new UserDTO(username, password);
         networkOutputPort.enviarSolicitudLogin(userDTO);
     }
 
     @Override
-    public void sendMessage(int channelId, String content) {
-        MessageDTO messageDTO = new MessageDTO(channelId, content);
-        // Save the message the user sends to the local DB
-        messageService.guardarMensajeTexto(content, this.currentUser, true);
-        networkOutputPort.enviarSolicitudMensaje(messageDTO);
+    public void logout() {
+        networkOutputPort.enviarSolicitudLogout();
     }
 
     @Override
@@ -66,6 +61,33 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
     }
 
     @Override
+    public void crearCanal(String channelName) {
+        networkOutputPort.enviarSolicitudCrearCanalGrupo(channelName);
+    }
+
+    @Override
+    public void crearCanalDirecto(int otherUserId) {
+        networkOutputPort.enviarSolicitudCrearCanalDirecto(otherUserId);
+    }
+
+    @Override
+    public void solicitarHistorialMensajes(int channelId) {
+        networkOutputPort.enviarSolicitudHistorial(channelId);
+    }
+
+    @Override
+    public void enviarMensajeTexto(int channelId, String content) {
+        SendMessageRequestDto requestDto = SendMessageRequestFactory.createRequest(channelId, MessageType.TEXT, content);
+        messageService.guardarMensajeTexto(content, this.currentUser, true);
+        networkOutputPort.enviarSolicitudMensajeTexto(requestDto);
+    }
+
+    @Override
+    public void invitarUsuario(int channelId, int userIdToInvite) {
+        networkOutputPort.enviarSolicitudInvitarUsuario(channelId, userIdToInvite);
+    }
+
+    @Override
     public void solicitarInvitaciones() {
         networkOutputPort.enviarSolicitudInvitaciones();
     }
@@ -74,7 +96,22 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
     public void responderInvitacion(int channelId, boolean aceptada) {
         networkOutputPort.enviarSolicitudResponderInvitacion(channelId, aceptada);
     }
-    // --- MÉTODOS DE INetworkInputPort (Llamadas desde el ServerListener) ---
+
+    @Override
+    public void enviarMensajeAudio(int channelId, String filePath) {
+        if (currentUser != null) {
+            messageService.guardarMensajeAudio(filePath, this.currentUser, true);
+        }
+        
+        SendMessageRequestDto requestDto = SendMessageRequestFactory.createRequest(channelId, MessageType.AUDIO, filePath);
+        networkOutputPort.enviarSolicitudMensajeAudio(requestDto);
+    }
+
+    @Override
+    public void descargarArchivo(String relativePath) {
+        networkOutputPort.enviarSolicitudDescargarArchivo(relativePath);
+    }
+
     @Override
     public void procesarLoginExitoso(int userId, String username) {
         this.currentUser = new User(userId, username);
@@ -83,7 +120,7 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
 
     @Override
     public void procesarFalloDeLogin(String mensajeError) {
-        this.currentUser = null; // Clear the user on failed login
+        this.currentUser = null;
         eventPublisher.publishEvent(new LoginFailureEvent(this, mensajeError));
     }
 
@@ -98,83 +135,46 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
     }
 
     @Override
-    public void crearCanalGrupo(String channelName) {
-        networkOutputPort.enviarSolicitudCrearCanal(channelName);
-    }
-    @Override
     public void procesarNuevoCanal(ChannelViewDTO channel) {
         System.out.println("LÓGICA: Nuevo canal creado con ID " + channel.getId() + ". Publicando evento...");
         eventPublisher.publishEvent(new NewChannelEvent(this, channel));
     }
+
     @Override
     public void procesarHistorialMensajes(List<MessageViewDTO> messages) {
         eventPublisher.publishEvent(new MessageHistoryEvent(this, messages));
     }
 
-        @Override
-    public void solicitarHistorialMensajes(int channelId) {
-        networkOutputPort.enviarSolicitudHistorial(channelId);
+    @Override
+    public void procesarMensajeRecibido(Message message) {
+        User authorEntity = message.getAuthor();
+        UserViewDTO authorDto = new UserViewDTO(authorEntity.getId(), authorEntity.getUsername());
+
+        MessageViewDTO messageDTO = new MessageViewDTO(
+            message.getId(),
+            ((com.arquitectura.entidades.TextMessage) message).getContent(),
+            authorDto,
+            message.getTimestamp(),
+            message.isOwnMessage(),
+            0
+        );
+        eventPublisher.publishEvent(new NewMessageEvent(this, messageDTO));
     }
 
     @Override
-    public void enviarMensajeTexto(int channelId, String content) {
-        SendMessageRequestDto requestDto = SendMessageRequestFactory.createRequest(channelId, MessageType.TEXT, content);
-        // Persist our own sent message
-        messageService.guardarMensajeTexto(content, this.currentUser, true);
-        networkOutputPort.enviarSolicitudMensajeTexto(requestDto);
-    }
-
-    @Override
-    public void enviarMensajeAudio(int channelId, String filePath) {
-        // Persist the sent audio message locally
-        if (currentUser != null) {
-            messageService.guardarMensajeAudio(filePath, this.currentUser, true);
-        }
-        
-        SendMessageRequestDto requestDto = SendMessageRequestFactory.createRequest(channelId, MessageType.AUDIO, filePath);
-        networkOutputPort.enviarSolicitudMensajeAudio(requestDto);
-    }
-   @Override
-public void procesarMensajeRecibido(Message message) {
-    // This is a simplified conversion. You might need to adjust it based on your object structure.
-    
-    // Create the author DTO that the MessageViewDTO constructor now expects
-    User authorEntity = message.getAuthor();
-    UserViewDTO authorDto = new UserViewDTO(authorEntity.getId(), authorEntity.getUsername());
-
-    MessageViewDTO messageDTO = new MessageViewDTO(
-        message.getId(),
-        ((com.arquitectura.entidades.TextMessage) message).getContent(), // Assuming it's a TextMessage
-        authorDto, // Pass the newly created author DTO
-        message.getTimestamp(),
-        message.isOwnMessage(),
-        0 // Placeholder for channelId, as it's not in the Message entity
-    );
-    eventPublisher.publishEvent(new NewMessageEvent(this, messageDTO));
-}
-@Override
     public void procesarListaDeInvitaciones(List<ChannelViewDTO> invitaciones) {
-        // Cuando la red nos da la lista de invitaciones, publicamos un evento
-        // para que la vista (que está escuchando) se actualice.
         eventPublisher.publishEvent(new InvitationListUpdateEvent(this, invitaciones));
     }
-@Override
+
+    @Override
     public void procesarMensajeRecibido(MessageViewDTO message) {
-        // 3. Save the received message to the local database
         if (currentUser != null) {
             boolean isOwnMessage = currentUser.getId() == message.getAuthor().getId();
-            User author = new User(message.getAuthor().getId(), message.getAuthor().getUsername()); // Create a temporary author entity
+            User author = new User(message.getAuthor().getId(), message.getAuthor().getUsername());
             
             messageService.guardarMensajeTexto(message.getContent(), author, isOwnMessage);
         }
         
-        // 4. Publish the event to update the UI
         eventPublisher.publishEvent(new NewMessageEvent(this, message));
     }
-
-    @Override
-    public void solicitarChatDirecto(String username) {
-        networkOutputPort.enviarSolicitudChatDirecto(username);
-    }
-    
 }

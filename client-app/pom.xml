@@ -24,13 +24,11 @@
             <artifactId>client-vista</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.arquitectura</groupId>
             <artifactId>client-controlador</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -41,7 +39,6 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -58,13 +55,9 @@
                     <goals>
                         <goal>repackage</goal>
                     </goals>
-                    <configuration>
-                        <mainClass>com.arquitectura.app.Launcher</mainClass>
-                    </configuration>
                 </execution>
             </executions>
         </plugin>
-
         <plugin>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-maven-plugin</artifactId>

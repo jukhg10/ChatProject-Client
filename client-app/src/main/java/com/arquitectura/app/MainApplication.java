@@ -15,17 +15,14 @@ public class MainApplication extends Application {
     private ConfigurableApplicationContext springContext;
 
     @Override
-    public void init() {
-        springContext = new SpringApplicationBuilder(SpringApp.class).run();
-    }
-
-    @Override
     public void start(Stage primaryStage) throws Exception {
-        // Inyectamos el Stage en nuestro AppController para que pueda manejar las escenas
+        // Inicia el contexto de Spring aquí, dentro del hilo de JavaFX
+        springContext = new SpringApplicationBuilder(SpringApp.class).run();
+        
+        // El resto del código para mostrar la ventana
         AppController appController = springContext.getBean(AppController.class);
         appController.setPrimaryStage(primaryStage);
 
-        // Cargamos la vista de Login primero
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/Login.fxml"));
         fxmlLoader.setControllerFactory(springContext::getBean);
         Parent root = fxmlLoader.load();
@@ -37,7 +34,14 @@ public class MainApplication extends Application {
 
     @Override
     public void stop() {
-        springContext.close();
+        if (springContext != null) {
+            springContext.close();
+        }
         Platform.exit();
+    }
+    
+    // Este método es llamado por la clase Launcher
+    public static void main(String[] args) {
+        launch(args);
     }
 }

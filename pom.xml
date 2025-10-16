@@ -15,14 +15,13 @@
         <module>cliente-persistencia</module>
         <module>client-logicaNegocio</module>
         <module>client-transporte</module>
-        <module>client-transporte-controller</module>
         <module>client-controlador</module>
         <module>client-vista</module>
-        <module>client-mensajes</module>
+        <module>client-app</module>
     </modules>
 
     <properties>
-        <spring.version>6.2.11</spring.version>
+        <spring-boot.version>3.2.0</spring-boot.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,16 +30,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>${spring.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-jpa</artifactId>
-                <version>3.1.2</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
 </project>

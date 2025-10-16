@@ -1,8 +1,8 @@
 package com.arquitectura.logica.ports;
 
+import com.arquitectura.dto.ChannelViewDTO; // <-- IMPORT CAMBIADO
+import com.arquitectura.dto.UserViewDTO;
 import com.arquitectura.entidades.Message;
-import com.arquitectura.entidades.User;
-import com.arquitectura.entidades.Channel;
 import java.util.List;
 
 /**
@@ -10,7 +10,11 @@ import java.util.List;
  * (como el controlador de red) entregan datos a la lógica de negocio.
  */
 public interface INetworkInputPort {
-    void procesarListaDeUsuarios(List<User> users);
+    void procesarListaDeUsuarios(List<UserViewDTO> users); // <-- TIPO CAMBIADO
     void procesarMensajeRecibido(Message message);
-    void procesarListaDeCanales(List<Channel> channels);
+    void procesarListaDeCanales(List<ChannelViewDTO> channels); // <-- TIPO CAMBIADO
+    void procesarNuevoCanal(ChannelViewDTO channel);
+    // Métodos para el flujo de login
+    void procesarLoginExitoso();
+    void procesarFalloDeLogin(String mensajeError);
 }

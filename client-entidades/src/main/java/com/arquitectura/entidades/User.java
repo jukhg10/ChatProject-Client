@@ -1,17 +1,8 @@
 package com.arquitectura.entidades;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-@Entity // Marks this class as a JPA entity (a table in the database)
-@Table(name = "users") // Specifies the table name
+// No jakarta.persistence imports
 public class User {
 
-    @Id // Marks this field as the primary key
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Tells the DB to auto-generate the ID
     private int id;
     private String username;
 

@@ -10,11 +10,9 @@
     </parent>
 
     <artifactId>client-transporte</artifactId>
-
+    
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javafx.version>21</javafx.version>
     </properties>
 
     <dependencies>
@@ -22,12 +20,26 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.arquitectura</groupId>
+            <artifactId>client-logicaNegocio</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.arquitectura</groupId>
             <artifactId>client-entidades</artifactId>
             <version>${project.version}</version>
         </dependency>
-    </dependencies>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
 
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+    </dependencies>
 </project>

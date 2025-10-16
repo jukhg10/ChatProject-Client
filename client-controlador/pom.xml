@@ -12,9 +12,7 @@
     <artifactId>client-controlador</artifactId>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javafx.version>21</javafx.version>
     </properties>
 
     <dependencies>
@@ -27,11 +25,27 @@
             <artifactId>client-logicaNegocio</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+        <dependency>
+            <groupId>com.arquitectura</groupId>
+            <artifactId>client-transporte</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.arquitectura</groupId>
             <artifactId>client-dto</artifactId>
             <version>${project.version}</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        
         </dependencies>
 </project>

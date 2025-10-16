@@ -11,12 +11,6 @@
 
     <artifactId>client-logicaNegocio</artifactId>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -25,23 +19,24 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.arquitectura</groupId>
-            <artifactId>client-entidades</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            </dependency>
+
         <dependency>
             <groupId>com.arquitectura</groupId>
             <artifactId>cliente-persistencia</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.arquitectura</groupId>
+            <artifactId>client-entidades</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
         <dependency>
             <groupId>com.arquitectura</groupId>
             <artifactId>client-dto</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-        </dependencies>
+    </dependencies>
 </project>

@@ -1,15 +1,15 @@
 package com.arquitectura.persistence;
 
-import com.arquitectura.entidades.User;
+import com.arquitectura.persistence.data.UserEntity; // <-- IMPORT UserEntity
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository // Tells Spring that this is a repository bean
-public interface UserRepository extends JpaRepository<User, Integer> {
+@Repository
+// The repository now works with UserEntity, not the pure User object
+public interface UserRepository extends JpaRepository<UserEntity, Integer> { 
 
-    // Spring Data JPA will automatically create a query based on the method name
-    // This will find a user by their username
-    Optional<User> findByUsername(String username);
+    // This method name automatically creates a "find by username" query
+    Optional<UserEntity> findByUsername(String username);
 }

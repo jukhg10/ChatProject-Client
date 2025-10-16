@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 
@@ -24,7 +25,12 @@ public class AppController {
     private final ServerConnection serverConnection;
     private final ConfigurableApplicationContext springContext;
     private Stage primaryStage;
+    @Value("${server.ip}")
+    private String serverIp;
 
+    @Value("${server.port}")
+    private int serverPort;
+    
     @Autowired
     public AppController(IClienteFachada fachada, ServerConnection serverConnection, ConfigurableApplicationContext springContext) {
         this.fachada = fachada;
@@ -36,9 +42,11 @@ public class AppController {
         this.primaryStage = primaryStage;
     }
 
-    public void connectAndLogin(String ip, int port, String username, String password) throws Exception {
-        serverConnection.connect(ip, port);
+    public void connectAndLogin(String username, String password) throws Exception {
+        // Establecemos la conexión usando los valores inyectados desde el properties
+        serverConnection.connect(serverIp, serverPort);
         
+        // El resto de la lógica para iniciar el listener y hacer login
         ServerListener listener = springContext.getBean(ServerListener.class);
         listener.setInputStream(serverConnection.getInputStream());
         listener.setNetworkInputPort((INetworkInputPort) fachada);
@@ -55,7 +63,9 @@ public class AppController {
             fachada.solicitarListaCanales();
         });
     }
-
+    public void solicitarListaCanales() {
+        fachada.solicitarListaCanales();
+    }
     public void showMainWindow() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/MainWindow.fxml"));
@@ -80,8 +90,24 @@ public class AppController {
     public void sendMessage(int channelId, String content) {
         fachada.sendMessage(channelId, content);
     }
+    public void enviarMensaje(int channelId, String content) {
+    fachada.enviarMensajeTexto(channelId, content);
+    }
+    public void solicitarHistorialMensajes(int channelId) {
+        fachada.solicitarHistorialMensajes(channelId);
+    }
+    public void solicitarInvitaciones() {
+        fachada.solicitarInvitaciones();
+    }
 
+    public void responderInvitacion(int channelId, boolean aceptada) {
+        fachada.responderInvitacion(channelId, aceptada);
+    }
+    public void enviarMensajeAudio(int channelId, String filePath) {
+    fachada.enviarMensajeAudio(channelId, filePath);
+}
     public void disconnectFromServer() throws Exception {
         serverConnection.disconnect();
     }
+    
 }

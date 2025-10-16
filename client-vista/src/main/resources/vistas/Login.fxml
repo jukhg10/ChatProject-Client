@@ -8,17 +8,28 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="350.0" spacing="15.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.arquitectura.vistas.LoginController">
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="350.0" spacing="15.0" style="-fx-background-color: #f4f4f4;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.arquitectura.vistas.LoginController">
    <children>
-      <Label text="Bienvenido al Chat">
+      <Label text="Unichat">
          <font>
-            <Font name="System Bold" size="24.0" />
+            <Font name="System Bold" size="36.0" />
          </font>
       </Label>
-      <TextField fx:id="serverIpField" promptText="IP del Servidor" />
-      <TextField fx:id="usernameField" promptText="Nombre de usuario" />
-      <PasswordField fx:id="passwordField" promptText="Contraseña" />
-      <Button fx:id="loginButton" mnemonicParsing="false" onAction="#handleLoginButtonAction" prefHeight="30.0" prefWidth="100.0" text="Conectar" />
+      <Label text="Inicio de sesión">
+         <font>
+            <Font size="18.0" />
+         </font>
+         <VBox.margin>
+            <Insets bottom="10.0" top="10.0" />
+         </VBox.margin>
+      </Label>
+      <TextField fx:id="usernameField" promptText="usuario" style="-fx-max-width: 250px;" />
+      <PasswordField fx:id="passwordField" promptText="Contraseña" style="-fx-max-width: 250px;" />
+      <Button fx:id="loginButton" mnemonicParsing="false" onAction="#handleLoginButtonAction" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: black; -fx-text-fill: white;" text="ingresar">
+         <font>
+            <Font name="System Bold" size="14.0" />
+         </font>
+      </Button>
       <Label fx:id="errorLabel" textFill="RED" />
    </children>
    <padding>

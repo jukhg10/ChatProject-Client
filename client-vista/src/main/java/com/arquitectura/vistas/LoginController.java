@@ -13,8 +13,6 @@ import org.springframework.stereotype.Component;
 public class LoginController {
 
     @FXML
-    private TextField serverIpField;
-    @FXML
     private TextField usernameField;
     @FXML
     private PasswordField passwordField;
@@ -31,22 +29,20 @@ public class LoginController {
 
     @FXML
     private void handleLoginButtonAction(ActionEvent event) {
-        String ip = serverIpField.getText();
         String username = usernameField.getText();
         String password = passwordField.getText();
         
-        if (ip.isEmpty() || username.isEmpty() || password.isEmpty()) {
+        if (username.isEmpty() || password.isEmpty()) {
             showError("Todos los campos son obligatorios.");
             return;
         }
         
-        // Deshabilita el botón para evitar múltiples clics
         loginButton.setDisable(true);
         errorLabel.setText("Conectando...");
         
         try {
-            // Llama al AppController para manejar la lógica de conexión y login
-            appController.connectAndLogin(ip, 12345, username, password); // Usamos un puerto quemado por ahora
+            // The call to connectAndLogin no longer needs the IP and port
+            appController.connectAndLogin(username, password);
         } catch (Exception e) {
             showError("Error de conexión: " + e.getMessage());
             loginButton.setDisable(false);
@@ -60,6 +56,5 @@ public class LoginController {
 
     public void showLoginSuccess() {
         errorLabel.setText("¡Conexión exitosa!");
-        // La transición a la siguiente ventana la manejará el AppController
     }
 }

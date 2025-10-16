@@ -3,13 +3,14 @@ package com.arquitectura.vistas;
 import com.arquitectura.controller.AppController;
 import com.arquitectura.dto.ChannelViewDTO;
 import com.arquitectura.dto.ConversationItemDTO;
+import com.arquitectura.dto.MessageViewDTO;
 import com.arquitectura.dto.UserViewDTO;
 import com.arquitectura.dto.events.ChannelListUpdateEvent;
+import com.arquitectura.dto.events.MessageHistoryEvent;
 import com.arquitectura.dto.events.NewChannelEvent;
 import com.arquitectura.dto.events.UserListUpdateEvent;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,10 +25,16 @@ import javafx.stage.Stage;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import com.arquitectura.dto.events.NewMessageEvent;
 
 import java.io.IOException;
+import javafx.stage.FileChooser;
+import java.io.File;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.sound.sampled.LineUnavailableException;
 
 @Component
 public class MainWindowController {
@@ -40,14 +47,20 @@ public class MainWindowController {
     @FXML private Button sendButton;
     @FXML private Button createChannelButton; // Botón para crear canal
     @FXML private Button searchUserButton;
+    @FXML private Button invitationsButton;
+    @FXML private Button recordButton;
 
     private final AppController appController;
     private final ConfigurableApplicationContext springContext;
-
+    private final AudioRecordingService audioService;
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+    private ConversationItemDTO currentConversation;
+    
     // Se inyecta el contexto de Spring para poder cargar nuevas vistas FXML
-    public MainWindowController(AppController appController, ConfigurableApplicationContext springContext) {
+    public MainWindowController(AppController appController, ConfigurableApplicationContext springContext, AudioRecordingService audioService) {
         this.appController = appController;
         this.springContext = springContext;
+        this.audioService = audioService; // Asigna el servicio
     }
 
     @FXML
@@ -55,16 +68,26 @@ public class MainWindowController {
         chatArea.appendText("¡Bienvenido al Chat!\n");
         // Configura la celda personalizada para la lista de conversaciones
         channelListView.setCellFactory(listView -> new ConversationCell());
-    }
+        channelListView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+        if (newSelection != null) {
+            this.currentConversation = newSelection; // <-- GUARDAR LA CONVERSACIÓN SELECCIONADA
+            chatArea.clear();
+            chatArea.appendText("Cargando historial para: " + newSelection.getConversationName() + "...\n");
+            appController.solicitarHistorialMensajes(newSelection.getChannelId());
+        }
+    });
+}
+    
 
     @FXML
-    private void handleSendButtonAction(ActionEvent event) {
-        String message = messageField.getText();
-        if (message != null && !message.isEmpty()) {
-            appController.sendMessage(1, message); // Asume canal 1 por ahora
-            messageField.clear();
-        }
+private void handleSendButtonAction(ActionEvent event) {
+    String message = messageField.getText();
+    if (message != null && !message.isEmpty() && currentConversation != null) { // <-- ASEGURARSE DE QUE HAY UNA CONVERSACIÓN ACTIVA
+        // Pasa el ID del canal actual y el contenido del mensaje
+        appController.enviarMensaje(currentConversation.getChannelId(), message);
+        messageField.clear();
     }
+}
 
     @FXML
     private void handleCreateChannelButton() {
@@ -112,35 +135,128 @@ private void handleSearchUserButton() {
             userListView.setItems(FXCollections.observableArrayList(usernames));
         });
     }
+    @FXML
+    private void handleInvitationsButtonAction() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/InvitationsWindow.fxml"));
+            fxmlLoader.setControllerFactory(springContext::getBean);
+            Parent parent = fxmlLoader.load();
+
+            // Obtenemos el controlador de la ventana que acabamos de cargar
+            InvitationsWindowController controller = fxmlLoader.getController();
+            controller.loadInvitations(); // Le pedimos que cargue los datos
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Mis Invitaciones");
+            stage.setScene(new Scene(parent));
+            stage.showAndWait();
+
+            // Opcional: Refrescar la lista de canales por si se aceptó una nueva invitación
+            appController.solicitarListaCanales();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @FXML
+    private void handleRecordButtonAction() {
+        if (currentConversation == null) {
+            chatArea.appendText("Selecciona una conversación para grabar un audio.\n");
+            return;
+        }
+
+        if (audioService.isRecording()) {
+            // --- Lógica para DETENER la grabación ---
+            audioService.stopRecording();
+            File recordedFile = audioService.getAudioFile();
+
+            if (recordedFile != null && recordedFile.exists()) {
+                appController.enviarMensajeAudio(currentConversation.getChannelId(), recordedFile.getAbsolutePath());
+                chatArea.appendText("Enviando audio: " + recordedFile.getName() + "\n");
+            }
+
+            // Restaurar el botón a su estado original
+            recordButton.setText("🎤 Grabar");
+            recordButton.setStyle("-fx-background-color: #5cb85c; -fx-text-fill: white;");
+
+        } else {
+            // --- Lógica para INICIAR la grabación ---
+            try {
+                audioService.startRecording();
+
+                // Cambiar la apariencia del botón para indicar que está grabando
+                recordButton.setText("■ Detener");
+                recordButton.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white;");
+
+            } catch (LineUnavailableException | IOException e) {
+                chatArea.appendText("Error al iniciar la grabación: " + e.getMessage() + "\n");
+                e.printStackTrace();
+            }
+        }
+    }
+    @EventListener
+    public void onNewMessageReceived(NewMessageEvent event) {
+        Platform.runLater(() -> {
+            MessageViewDTO newMessage = event.getMessage();
+            // Solo añade el mensaje si corresponde a la conversación actual
+            if (currentConversation != null && newMessage.getChannelId() == currentConversation.getChannelId()) {
+                String formattedTime = newMessage.getTimestamp().format(timeFormatter);
+                String formattedMessage = String.format("[%s] %s: %s\n",
+                        formattedTime,
+                        newMessage.getAuthorName(),
+                        newMessage.getContent());
+                chatArea.appendText(formattedMessage);
+            }
+        });
+    }
     @EventListener
     public void onNewChannelCreated(NewChannelEvent event) {
         Platform.runLater(() -> {
             ChannelViewDTO newChannel = event.getNewChannel();
             ConversationItemDTO newItem = new ConversationItemDTO(
-                "default", // Usamos la imagen por defecto
-                newChannel.getName(),
-                "Canal recién creado." // Mensaje placeholder
-            );
+            newChannel.getId(), // Add the channel ID
+            "default",
+            newChannel.getName(),
+            "Canal recién creado."
+        );
             
             // Añade el nuevo canal al principio de la lista de conversaciones
             channelListView.getItems().add(0, newItem);
         });
     }
+    
     @EventListener
     public void onChannelListUpdate(ChannelListUpdateEvent event) {
         Platform.runLater(() -> {
             List<ConversationItemDTO> conversations = event.getChannels().stream()
-                .map(channel -> new ConversationItemDTO(
-                    "default", // Temporalmente
-                    channel.getName(),
-                    "Último mensaje..." // Temporalmente
-                ))
-                .collect(Collectors.toList());
+            .map(channel -> new ConversationItemDTO(
+                channel.getId(), // Add the channel ID
+                "default",
+                channel.getName(),
+                "Último mensaje..."
+            ))
+            .collect(Collectors.toList());
             
             channelListView.setItems(FXCollections.observableArrayList(conversations));
         });
     }
 
+    @EventListener
+    public void onHistoryReceived(MessageHistoryEvent event) {
+        Platform.runLater(() -> {
+            chatArea.clear(); // Limpia el área de chat
+            for (com.arquitectura.dto.MessageViewDTO msg : event.getMessages()) {
+                String formattedTime = msg.getTimestamp().format(timeFormatter);
+                String formattedMessage = String.format("[%s] %s: %s\n",
+                        formattedTime,
+                        msg.getAuthorName(),
+                        msg.getContent());
+                chatArea.appendText(formattedMessage);
+            }
+        });
+    }
     public void displayNewMessage(String message) {
         chatArea.appendText(message + "\n");
     }

@@ -18,17 +18,21 @@
         </VBox>
     </left>
     <center>
-        <VBox>
-            <children>
-                <TextArea fx:id="chatArea" editable="false" VBox.vgrow="ALWAYS" />
-                <HBox>
-                    <children>
-                        <TextField fx:id="messageField" HBox.hgrow="ALWAYS" />
-                        <Button fx:id="sendButton" onAction="#handleSendButtonAction" text="Send" />
-                        <Button fx:id="createChannelButton" onAction="#handleCreateChannelButton" text="Crear Canal" />
-                    </children>
-                </HBox>
-            </children>
-        </VBox>
-    </center>
+    <VBox>
+        <children>
+            <TextArea fx:id="chatArea" editable="false" VBox.vgrow="ALWAYS" />
+            <HBox>
+                <children>
+                    <TextField fx:id="messageField" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="sendButton" onAction="#handleSendButtonAction" text="Send" />
+                    <Button fx:id="createChannelButton" onAction="#handleCreateChannelButton" text="Crear Canal" />
+                    <Button fx:id="invitationsButton" onAction="#handleInvitationsButtonAction" text="Ver Invitaciones" />
+
+                    <Button fx:id="recordButton" onAction="#handleRecordButtonAction" text="🎤 Grabar" style="-fx-background-color: #5cb85c; -fx-text-fill: white;"/>
+
+                </children>
+            </HBox>
+        </children>
+    </VBox>
+</center>
 </BorderPane>

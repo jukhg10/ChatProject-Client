@@ -32,7 +32,7 @@ public class AudioRecordingService {
         microphone.start(); // Empieza a capturar audio
 
         // 3. Crea un archivo temporal donde se guardará la grabación
-        audioFile = File.createTempFile("temp_audio_", ".wav");
+        audioFile = File.createTempFile("tempaudio", ".wav");
 
         // 4. Inicia un nuevo hilo para que la grabación no bloquee la interfaz de usuario
         Thread recordingThread = new Thread(() -> {

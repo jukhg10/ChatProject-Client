@@ -104,7 +104,40 @@ public class ServerListener implements Runnable {
                     List<ChannelViewDTO> channels = gson.fromJson(jsonCanales, channelListType);
                     networkInputPort.procesarListaDeCanales(channels);
                     break;
+
                 
+                case "DESCARGAR_ARCHIVO":
+    if (parts.length >= 4) {
+        try {
+            String fileName = parts[2];
+            String base64Data = parts[3];
+
+            // 1. Decodificar la información Base64 a bytes
+            byte[] audioBytes = java.util.Base64.getDecoder().decode(base64Data);
+
+            // 2. Guardar el archivo en una carpeta temporal del sistema
+            java.io.File tempDir = new java.io.File(System.getProperty("java.io.tmpdir"), "chat_audio");
+            if (!tempDir.exists()) {
+                tempDir.mkdirs();
+            }
+            java.io.File tempFile = new java.io.File(tempDir, fileName);
+            java.nio.file.Files.write(tempFile.toPath(), audioBytes);
+
+            System.out.println("Audio descargado en: " + tempFile.getAbsolutePath());
+
+            // 3. Publicar un evento para que la UI sepa que el archivo está listo
+            eventPublisher.publishEvent(new com.arquitectura.dto.events.FileDownloadEvent(this, tempFile.getAbsolutePath()));
+
+        } catch (java.io.IOException e) {
+            System.err.println("Fallo al guardar el archivo de audio descargado: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    break;
+    case "ENVIAR_MENSAJE_AUDIO":
+    // No se necesita hacer nada, solo es una confirmación de que llegó.
+    // Esto evita el mensaje de "Comando exitoso desconocido".
+    break;
                 case "GET_HISTORY":
                     // El formato del servidor es: OK;GET_HISTORY;{channelId};{jsonHistory}
                     if (parts.length >= 4) {

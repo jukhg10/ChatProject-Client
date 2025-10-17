@@ -35,6 +35,7 @@ public class CreateChannelController {
             errorLabel.setText("El nombre del canal no puede estar vacío.");
         }
     }
+    
 
     private void closeWindow() {
         Stage stage = (Stage) createChannelButton.getScene().getWindow();

@@ -17,15 +17,18 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import com.arquitectura.dto.events.NewMessageEvent;
+import com.arquitectura.dto.events.FileDownloadEvent;
 
 import java.io.IOException;
 import javafx.stage.FileChooser;
@@ -33,6 +36,8 @@ import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 
 import javax.sound.sampled.LineUnavailableException;
 
@@ -42,7 +47,7 @@ public class MainWindowController {
     // --- FXML Components ---
     @FXML private ListView<ConversationItemDTO> channelListView;
     @FXML private ListView<String> userListView;
-    @FXML private TextArea chatArea;
+    @FXML private TextFlow chatArea;
     @FXML private TextField messageField;
     @FXML private Button sendButton;
     @FXML private Button createChannelButton; // Botón para crear canal
@@ -53,28 +58,29 @@ public class MainWindowController {
     private final AppController appController;
     private final ConfigurableApplicationContext springContext;
     private final AudioRecordingService audioService;
+    private final AudioPlaybackService playbackService;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     private ConversationItemDTO currentConversation;
     private List<UserViewDTO> cachedUserList;
     
     // Se inyecta el contexto de Spring para poder cargar nuevas vistas FXML
-    public MainWindowController(AppController appController, ConfigurableApplicationContext springContext, AudioRecordingService audioService) {
-        this.appController = appController;
+public MainWindowController(AppController appController, ConfigurableApplicationContext springContext, AudioRecordingService audioService, AudioPlaybackService playbackService) {        this.appController = appController;
         this.springContext = springContext;
-        this.audioService = audioService; // Asigna el servicio
+        this.audioService = audioService;
+        this.playbackService = playbackService;
     }
 
     @FXML
 private void initialize() {
     System.out.println("✅ INITIALIZE: MainWindowController is initializing."); // <-- ADD THIS
-    chatArea.appendText("¡Bienvenido al Chat!\n");
+    displaySystemMessage("¡Bienvenido al Chat!\n");
     channelListView.setCellFactory(listView -> new ConversationCell());
     inviteUserButton.setDisable(true);
     channelListView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
         if (newSelection != null) {
             this.currentConversation = newSelection;
-            chatArea.clear();
-            chatArea.appendText("Cargando historial para: " + newSelection.getConversationName() + "...\n");
+            chatArea.getChildren().clear();
+displaySystemMessage("Cargando historial para: " + newSelection.getConversationName() + "...\n");
             appController.solicitarHistorialMensajes(newSelection.getChannelId());
             inviteUserButton.setDisable(false);
         }
@@ -200,7 +206,7 @@ private void handleSearchUserButton() {
     @FXML
     private void handleRecordButtonAction() {
         if (currentConversation == null) {
-            chatArea.appendText("Selecciona una conversación para grabar un audio.\n");
+            displaySystemMessage("Selecciona una conversación para grabar un audio.\n");
             return;
         }
 
@@ -211,7 +217,7 @@ private void handleSearchUserButton() {
 
             if (recordedFile != null && recordedFile.exists()) {
                 appController.enviarMensajeAudio(currentConversation.getChannelId(), recordedFile.getAbsolutePath());
-                chatArea.appendText("Enviando audio: " + recordedFile.getName() + "\n");
+                displaySystemMessage("Enviando audio: " + recordedFile.getName() + "\n");
             }
 
             // Restaurar el botón a su estado original
@@ -228,26 +234,21 @@ private void handleSearchUserButton() {
                 recordButton.setStyle("-fx-background-color: #d9534f; -fx-text-fill: white;");
 
             } catch (LineUnavailableException | IOException e) {
-                chatArea.appendText("Error al iniciar la grabación: " + e.getMessage() + "\n");
-                e.printStackTrace();
-            }
+    displaySystemMessage("Error al iniciar la grabación: " + e.getMessage() + "\n"); // <-- ASÍ DEBE QUEDAR
+    e.printStackTrace();
+}
         }
     }
     @EventListener
-    public void onNewMessageReceived(NewMessageEvent event) {
-        Platform.runLater(() -> {
-            MessageViewDTO newMessage = event.getMessage();
-            // Solo añade el mensaje si corresponde a la conversación actual
-            if (currentConversation != null && newMessage.getChannelId() == currentConversation.getChannelId()) {
-                String formattedTime = newMessage.getTimestamp().format(timeFormatter);
-                String formattedMessage = String.format("[%s] %s: %s\n",
-                        formattedTime,
-                        newMessage.getAuthorName(),
-                        newMessage.getContent());
-                chatArea.appendText(formattedMessage);
-            }
-        });
-    }
+public void onNewMessageReceived(NewMessageEvent event) {
+    Platform.runLater(() -> {
+        MessageViewDTO newMessage = event.getMessage();
+        // Solo añade el mensaje si corresponde a la conversación actual
+        if (currentConversation != null && newMessage.getChannelId() == currentConversation.getChannelId()) {
+            appendMessage(newMessage); // Llama al nuevo método
+        }
+    });
+}
     @EventListener
 public void onNewChannelCreated(NewChannelEvent event) {
     Platform.runLater(() -> {
@@ -276,21 +277,49 @@ public void onChannelListUpdate(ChannelListUpdateEvent event) {
         channelListView.setItems(FXCollections.observableArrayList(conversations));
     });
 }
+@EventListener
+public void onFileDownloaded(FileDownloadEvent event) {
+    Platform.runLater(() -> {
+        playbackService.playAudio(event.getFilePath());
+    });
+}
     @EventListener
-    public void onHistoryReceived(MessageHistoryEvent event) {
-        Platform.runLater(() -> {
-            chatArea.clear(); // Limpia el área de chat
-            for (com.arquitectura.dto.MessageViewDTO msg : event.getMessages()) {
-                String formattedTime = msg.getTimestamp().format(timeFormatter);
-                String formattedMessage = String.format("[%s] %s: %s\n",
-                        formattedTime,
-                        msg.getAuthorName(),
-                        msg.getContent());
-                chatArea.appendText(formattedMessage);
-            }
+public void onHistoryReceived(MessageHistoryEvent event) {
+    Platform.runLater(() -> {
+        chatArea.getChildren().clear();
+        for (com.arquitectura.dto.MessageViewDTO msg : event.getMessages()) {
+            appendMessage(msg); // <-- Deja solo una llamada
+        }
+    });
+}
+   
+    
+   private void appendMessage(MessageViewDTO msg) {
+    String formattedTime = msg.getTimestamp().format(timeFormatter);
+    String prefix = String.format("[%s] %s: ", formattedTime, msg.getAuthorName());
+    
+    Text prefixText = new Text(prefix);
+    chatArea.getChildren().add(prefixText);
+
+    // Revisa si es un mensaje de audio para crear un enlace
+    if (msg.getContent().startsWith("Audio: ")) {
+        String fileName = msg.getContent().substring("Audio: ".length());
+        Hyperlink audioLink = new Hyperlink("▶️ Escuchar " + fileName);
+        audioLink.setOnAction(e -> {
+            displaySystemMessage("Descargando " + fileName + "...\n");
+            appController.descargarYReproducirAudio(fileName);
         });
+        chatArea.getChildren().add(audioLink);
+    } else {
+        Text contentText = new Text(msg.getContent());
+        chatArea.getChildren().add(contentText);
     }
-    public void displayNewMessage(String message) {
-        chatArea.appendText(message + "\n");
-    }
+    
+    chatArea.getChildren().add(new Text("\n"));
+} 
+private void displaySystemMessage(String message) {
+    Text systemText = new Text(message);
+    systemText.setStyle("-fx-fill: grey; -fx-font-style: italic;");
+    chatArea.getChildren().add(systemText);
+}
 }

@@ -102,7 +102,9 @@ public class AppController {
     public void invitarUsuario(int channelId, int userIdToInvite) {
     fachada.invitarUsuario(channelId, userIdToInvite);
 }
-
+    public void descargarYReproducirAudio(String relativePath) {
+    fachada.descargarArchivo(relativePath);
+}
     public void enviarMensajeAudio(int channelId, String filePath) {
         fachada.enviarMensajeAudio(channelId, filePath);
     }

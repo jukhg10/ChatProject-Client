@@ -99,9 +99,19 @@ public void procesarHistorialMensajes(int channelId, java.util.List<com.arquitec
     }
 
     @Override
-    public void enviarSolicitudMensajeAudio(SendMessageRequestDto requestDto) {
-        sendMessage("ENVIAR_MENSAJE_AUDIO;" + requestDto.getChannelId() + ";" + requestDto.getContent());
-    }
+public void enviarSolicitudMensajeAudio(SendMessageRequestDto requestDto) {
+    System.out.println("--- [TRANSPORTE LOG 1] Recibido DTO en la capa de transporte. ---");
+    
+    // El contenido del DTO ya debería ser el payload completo: id;nombre;datos
+    String payload = requestDto.getContent();
+    System.out.println("[TRANSPORTE LOG 2] Payload extraído del DTO (primeros 80 chars): '" + payload.substring(0, Math.min(payload.length(), 80)) + "...'");
+
+    String finalMessage = "ENVIAR_MENSAJE_AUDIO;" + payload;
+    System.out.println("[TRANSPORTE LOG 3] MENSAJE FINAL A ENVIAR AL SERVIDOR: '" + finalMessage.substring(0, Math.min(finalMessage.length(), 100)) + "...'");
+    
+    sendMessage(finalMessage);
+    System.out.println("--- [TRANSPORTE LOG 4] Mensaje enviado por el socket. ---\n");
+}
     
     @Override
     public void enviarSolicitudDescargarArchivo(String relativePath) {

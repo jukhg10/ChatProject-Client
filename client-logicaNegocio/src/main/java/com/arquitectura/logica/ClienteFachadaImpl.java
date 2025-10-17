@@ -114,9 +114,9 @@ public ClienteFachadaImpl(INetworkOutputPort networkOutputPort, ApplicationEvent
     }
 
   
-    @Override
+  @Override
 public void enviarMensajeAudio(int channelId, String filePath) {
-    // Local saving logic
+    // Lógica de UI (sin cambios)
     if (currentUser != null) {
         Message savedMessage = messageService.guardarMensajeAudio(filePath, this.currentUser, true);
         UserViewDTO authorDto = new UserViewDTO(this.currentUser.getId(), this.currentUser.getUsername());
@@ -125,41 +125,45 @@ public void enviarMensajeAudio(int channelId, String filePath) {
             "Audio: " + new java.io.File(filePath).getName(),
             authorDto,
             savedMessage.getTimestamp(),
-            true,
-            channelId
+            true, channelId
         );
         eventPublisher.publishEvent(new NewMessageEvent(this, messageDTO));
     }
 
-    // --- NEW LOGIC TO SEND FILE DATA ---
     try {
-        // 1. Get the file name
+        System.out.println("\n--- [FACHADA LOG 1] Iniciando envío de audio para canal: " + channelId + " ---");
+        
         java.io.File audioFile = new java.io.File(filePath);
         String fileName = audioFile.getName();
+        System.out.println("[FACHADA LOG 2] Nombre del archivo: '" + fileName + "'");
 
-        // 2. Read the file's bytes
         byte[] audioBytes = java.nio.file.Files.readAllBytes(audioFile.toPath());
-
-        // 3. Encode the bytes into a Base64 string
         String encodedAudio = java.util.Base64.getEncoder().encodeToString(audioBytes);
+        // Se acorta el log para no imprimir toda la cadena Base64
+        String encodedAudioPreview = encodedAudio.substring(0, Math.min(encodedAudio.length(), 40));
+        System.out.println("[FACHADA LOG 3] Audio codificado en Base64 (primeros 40 chars): '" + encodedAudioPreview + "...'");
 
-        // 4. Create a payload with the file name and the data
-        String payload = fileName + ";" + encodedAudio;
-
-        // 5. Send it to the server
-        SendMessageRequestDto requestDto = SendMessageRequestFactory.createRequest(channelId, MessageType.AUDIO, payload);
+        // Se construye el payload COMPLETO que el servidor espera.
+        String fullPayload = String.format("%d;%s;%s", channelId, fileName, encodedAudio);
+        System.out.println("[FACHADA LOG 4] Payload COMPLETO construido: '" + fullPayload.substring(0, Math.min(fullPayload.length(), 80)) + "...'");
+        
+        // Se pasa el payload completo al DTO.
+        SendMessageRequestDto requestDto = new SendMessageRequestDto(channelId, "AUDIO", fullPayload);
+        
+        System.out.println("[FACHADA LOG 5] DTO creado. Llamando a la capa de transporte (networkOutputPort)...");
         networkOutputPort.enviarSolicitudMensajeAudio(requestDto);
+        System.out.println("--- [FACHADA LOG 6] Llamada a la capa de transporte finalizada. ---\n");
+
 
     } catch (java.io.IOException e) {
-        System.err.println("Error reading audio file for sending: " + e.getMessage());
+        System.err.println("Error FATAL en la fachada al leer el archivo de audio: " + e.getMessage());
         e.printStackTrace();
-        // Optionally, display an error to the user in the UI
     }
 }
     @Override
-    public void descargarArchivo(String relativePath) {
-        networkOutputPort.enviarSolicitudDescargarArchivo(relativePath);
-    }
+public void descargarArchivo(String relativePath) {
+    networkOutputPort.enviarSolicitudDescargarArchivo(relativePath);
+}
 
    @Override
 public void procesarLoginExitoso(int userId, String username) {
@@ -169,10 +173,16 @@ public void procesarLoginExitoso(int userId, String username) {
 }
 
     @Override
-    public void procesarFalloDeLogin(String mensajeError) {
-        this.currentUser = null;
+public void procesarFalloDeLogin(String mensajeError) {
+    // IMPORTANTE: Solo anula al usuario si la sesión nunca se inició.
+    // Esto evita que un error post-login (como el del audio) destruya la sesión.
+    if (this.currentUser == null) {
         eventPublisher.publishEvent(new LoginFailureEvent(this, mensajeError));
+    } else {
+        // Si ya hay una sesión, simplemente imprime el error en la consola sin cerrar nada.
+        System.err.println("Error recibido del servidor: " + mensajeError);
     }
+}
 
     @Override
     public void procesarListaDeUsuarios(List<UserViewDTO> users) {

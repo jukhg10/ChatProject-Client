@@ -2,11 +2,12 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.text.TextFlow?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.arquitectura.vistas.MainWindowController">
     <left>
@@ -20,7 +21,11 @@
     <center>
     <VBox>
         <children>
-            <TextArea fx:id="chatArea" editable="false" VBox.vgrow="ALWAYS" />
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+    <content>
+        <TextFlow fx:id="chatArea" style="-fx-padding: 5;"/>
+    </content>
+</ScrollPane>
             <HBox>
                 <children>
                     <TextField fx:id="messageField" HBox.hgrow="ALWAYS" />

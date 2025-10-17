@@ -52,24 +52,17 @@ public class InviteUserController {
     public void setChannelInfo(int channelId, String channelName) {
         this.currentChannelId = channelId;
         channelNameLabel.setText("Invitar a '" + channelName + "'");
-        appController.solicitarListaUsuarios();
+        
     }
-
+public void loadUsers(List<UserViewDTO> users) {
+        if (users != null) {
+            usersListView.setItems(FXCollections.observableArrayList(users));
+        }
+    }
     /**
      * Listens for the user list event and populates the ListView.
      */
-    @EventListener
-    public void onUserListUpdate(UserListUpdateEvent event) {
-        // This listener ensures the ListView is populated when the user data arrives.
-        // It's important that this controller is active to receive the event.
-        Platform.runLater(() -> {
-            List<UserViewDTO> users = event.getUsers();
-            if (users != null) {
-                usersListView.setItems(FXCollections.observableArrayList(users));
-            }
-        });
-    }
-
+    
     @FXML
     private void handleInviteButtonAction() {
         UserViewDTO selectedUser = usersListView.getSelectionModel().getSelectedItem();

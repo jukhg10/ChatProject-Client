@@ -55,6 +55,7 @@ public class MainWindowController {
     private final AudioRecordingService audioService;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     private ConversationItemDTO currentConversation;
+    private List<UserViewDTO> cachedUserList;
     
     // Se inyecta el contexto de Spring para poder cargar nuevas vistas FXML
     public MainWindowController(AppController appController, ConfigurableApplicationContext springContext, AudioRecordingService audioService) {
@@ -87,31 +88,31 @@ private void initialize() {
 }
     
 @FXML
-private void handleInviteUserButtonAction() {
-    if (currentConversation == null) {
-        // Safeguard in case the button is somehow clicked without a channel selected
-        return;
+    private void handleInviteUserButtonAction() {
+        if (currentConversation == null) { return; }
+
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/InviteUser.fxml"));
+            fxmlLoader.setControllerFactory(springContext::getBean);
+            Parent parent = fxmlLoader.load();
+
+            InviteUserController controller = fxmlLoader.getController();
+            controller.setChannelInfo(currentConversation.getChannelId(), currentConversation.getConversationName());
+            
+            // ADD THIS LINE: Pass the cached list to the new controller
+            controller.loadUsers(this.cachedUserList);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Invitar Usuario al Canal");
+            stage.setScene(new Scene(parent));
+            stage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    try {
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/InviteUser.fxml"));
-        fxmlLoader.setControllerFactory(springContext::getBean);
-        Parent parent = fxmlLoader.load();
-
-        // IMPORTANT: Get the new controller and pass the current channel info to it
-        InviteUserController controller = fxmlLoader.getController();
-        controller.setChannelInfo(currentConversation.getChannelId(), currentConversation.getConversationName());
-
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setTitle("Invitar Usuario al Canal");
-        stage.setScene(new Scene(parent));
-        stage.showAndWait();
-
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
     @FXML
 private void handleSendButtonAction(ActionEvent event) {
     String message = messageField.getText();
@@ -160,16 +161,17 @@ private void handleSearchUserButton() {
 }
 
     @EventListener
-public void onUserListUpdate(UserListUpdateEvent event) {
-    // V-- ADD THIS LINE --V
-    System.out.println("🎉 EVENT: onUserListUpdate received with " + event.getUsers().size() + " users.");
-    Platform.runLater(() -> {
-        List<String> usernames = event.getUsers().stream()
-                                      .map(UserViewDTO::getUsername)
-                                      .collect(Collectors.toList());
-        userListView.setItems(FXCollections.observableArrayList(usernames));
-    });
-}
+    public void onUserListUpdate(UserListUpdateEvent event) {
+        // ADD THIS LINE to save the user list when it arrives
+        this.cachedUserList = event.getUsers(); 
+        
+        Platform.runLater(() -> {
+            List<String> usernames = event.getUsers().stream()
+                                          .map(UserViewDTO::getUsername)
+                                          .collect(Collectors.toList());
+            userListView.setItems(FXCollections.observableArrayList(usernames));
+        });
+    }
     @FXML
     private void handleInvitationsButtonAction() {
         try {
@@ -247,35 +249,30 @@ public void onUserListUpdate(UserListUpdateEvent event) {
         });
     }
     @EventListener
-    public void onNewChannelCreated(NewChannelEvent event) {
-        Platform.runLater(() -> {
-            ChannelViewDTO newChannel = event.getNewChannel();
-            ConversationItemDTO newItem = new ConversationItemDTO(
-            newChannel.getId(), // Add the channel ID
+public void onNewChannelCreated(NewChannelEvent event) {
+    Platform.runLater(() -> {
+        ChannelViewDTO newChannel = event.getNewChannel();
+        ConversationItemDTO newItem = new ConversationItemDTO(
+            newChannel.getChannelId(), // <-- FIX: Was getId()
             "default",
-            newChannel.getName(),
+            newChannel.getChannelName(), // <-- FIX: Was getName()
             "Canal recién creado."
         );
-            
-            // Añade el nuevo canal al principio de la lista de conversaciones
-            channelListView.getItems().add(0, newItem);
-        });
-    }
+        channelListView.getItems().add(0, newItem);
+    });
+}
     
     @EventListener
 public void onChannelListUpdate(ChannelListUpdateEvent event) {
-    // V-- ADD THIS LINE --V
-    System.out.println("🎉 EVENT: onChannelListUpdate received with " + event.getChannels().size() + " channels.");
     Platform.runLater(() -> {
         List<ConversationItemDTO> conversations = event.getChannels().stream()
-        .map(channel -> new ConversationItemDTO(
-            channel.getId(),
-            "default",
-            channel.getName(),
-            "Último mensaje..."
-        ))
-        .collect(Collectors.toList());
-        
+            .map(channel -> new ConversationItemDTO(
+                channel.getChannelId(), // <-- FIX: Was getId()
+                "default",
+                channel.getChannelName(), // <-- FIX: Was getName()
+                "Último mensaje..."
+            ))
+            .collect(Collectors.toList());
         channelListView.setItems(FXCollections.observableArrayList(conversations));
     });
 }

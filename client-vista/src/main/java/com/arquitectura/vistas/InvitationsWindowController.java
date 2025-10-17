@@ -30,19 +30,18 @@ public class InvitationsWindowController {
     }
 
     @FXML
-    private void initialize() {
-        // Personalizamos cómo se muestra cada ítem en la lista
-        invitationsListView.setCellFactory(param -> new ListCell<>() {
-            @Override
-            protected void updateItem(ChannelViewDTO item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null || item.getName() == null) {
-                    setText(null);
-                } else {
-                    setText(item.getName());
-                }
+public void initialize() {
+    invitationsListView.setCellFactory(param -> new ListCell<ChannelViewDTO>() {
+        @Override
+        protected void updateItem(ChannelViewDTO item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                setText(null);
+            } else {
+                setText(item.getChannelName()); // <-- FIX: Was getName()
             }
-        });
+        }
+    });
         invitationsListView.setItems(invitations);
 
         // Deshabilitar botones si no hay nada seleccionado
@@ -56,24 +55,37 @@ public class InvitationsWindowController {
     }
 
     @FXML
-    private void handleAcceptAction() {
-        ChannelViewDTO selected = invitationsListView.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            appController.responderInvitacion(selected.getId(), true);
-            statusLabel.setText("Invitación a '" + selected.getName() + "' aceptada.");
-            invitations.remove(selected); // La quitamos de la lista
-        }
+private void handleAcceptAction() {
+    // This line was correct, it gets the selected item
+    ChannelViewDTO selectedInvitation = invitationsListView.getSelectionModel().getSelectedItem();
+
+    // The 'if' condition was correct
+    if (selectedInvitation != null) {
+        // FIX: The variable name inside the 'if' was wrong.
+        // It should use 'selectedInvitation', which we just declared.
+        appController.responderInvitacion(selectedInvitation.getChannelId(), true);
+        statusLabel.setText("Aceptada la invitación a: " + selectedInvitation.getChannelName());
+        
+        // This line was also correct
+        invitationsListView.getItems().remove(selectedInvitation);
     }
+}
 
     @FXML
-    private void handleRejectAction() {
-        ChannelViewDTO selected = invitationsListView.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            appController.responderInvitacion(selected.getId(), false);
-            statusLabel.setText("Invitación a '" + selected.getName() + "' rechazada.");
-            invitations.remove(selected); // La quitamos de la lista
-        }
+private void handleRejectAction() {
+    // This line was correct
+    ChannelViewDTO selectedInvitation = invitationsListView.getSelectionModel().getSelectedItem();
+
+    // The 'if' condition was correct
+    if (selectedInvitation != null) {
+        // FIX: The variable name inside the 'if' was also wrong here.
+        appController.responderInvitacion(selectedInvitation.getChannelId(), false);
+        statusLabel.setText("Rechazada la invitación a: " + selectedInvitation.getChannelName());
+        
+        // This line was correct
+        invitationsListView.getItems().remove(selectedInvitation);
     }
+}
 
     // Escucha el evento que la capa de lógica dispara cuando recibe las invitaciones
     @EventListener

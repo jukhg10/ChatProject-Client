@@ -131,10 +131,12 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
     }
 
     @Override
-    public void procesarNuevoCanal(ChannelViewDTO channel) {
-        System.out.println("LÓGICA: Nuevo canal creado con ID " + channel.getId() + ". Publicando evento...");
-        eventPublisher.publishEvent(new NewChannelEvent(this, channel));
-    }
+public void procesarNuevoCanal(ChannelViewDTO channel) {
+    // FIX: Change getId() to getChannelId() in this print statement
+    System.out.println("LÓGICA: Nuevo canal creado con ID " + channel.getChannelId() + ". Publicando evento...");
+    
+    eventPublisher.publishEvent(new NewChannelEvent(this, channel));
+}
 
     
 

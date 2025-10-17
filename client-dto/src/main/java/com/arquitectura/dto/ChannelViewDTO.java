@@ -1,27 +1,35 @@
 package com.arquitectura.dto;
 
-/**
- * DTO para transportar la información de un canal a la capa de vista.
- */
 public class ChannelViewDTO {
-    private final int id;
-    private final String name;
 
-    public ChannelViewDTO(int id, String name) {
-        this.id = id;
-        this.name = name;
+    // FIX: Renombrar 'id' a 'channelId' para que coincida con el JSON del servidor
+    private final int channelId;
+
+    // FIX: Renombrar 'name' a 'channelName' para que coincida con el JSON del servidor
+    private final String channelName;
+
+    // El constructor y los getters también deben ser actualizados
+    public ChannelViewDTO(int channelId, String channelName) {
+        this.channelId = channelId;
+        this.channelName = channelName;
     }
 
-    public int getId() {
-        return id;
+    // FIX: Actualizar el nombre del getter
+    public int getChannelId() {
+        return channelId;
     }
 
-    public String getName() {
-        return name;
+    // FIX: Actualizar el nombre del getter
+    public String getChannelName() {
+        return channelName;
     }
 
+    // (El resto de la clase, como el método toString(), puede quedarse como está o ser actualizado también)
     @Override
     public String toString() {
-        return "ChannelViewDTO{" + "id=" + id + ", name='" + name + '\'' + '}';
+        return "ChannelViewDTO{" +
+               "channelId=" + channelId +
+               ", channelName='" + channelName + '\'' +
+               '}';
     }
 }

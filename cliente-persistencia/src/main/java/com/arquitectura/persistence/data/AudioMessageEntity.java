@@ -11,4 +11,5 @@ public class AudioMessageEntity extends MessageEntity {
     // --- Getters and Setters ---
     public String getAudioUrl() { return audioUrl; }
     public void setAudioUrl(String audioUrl) { this.audioUrl = audioUrl; }
+    
 }

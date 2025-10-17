@@ -165,8 +165,8 @@ public void procesarHistorialMensajes(int channelId, List<MessageViewDTO> messag
     @Override
     public void procesarMensajeRecibido(MessageViewDTO message) {
         if (currentUser != null) {
-            boolean isOwnMessage = currentUser.getId() == message.getAuthor().getId();
-            User author = new User(message.getAuthor().getId(), message.getAuthor().getUsername());
+            boolean isOwnMessage = currentUser.getId() == message.getAuthor().getUserId();
+            User author = new User(message.getAuthor().getUserId(), message.getAuthor().getUsername());
             
             messageService.guardarMensajeTexto(message.getContent(), author, isOwnMessage);
         }

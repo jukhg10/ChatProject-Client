@@ -49,7 +49,7 @@ public class MainWindowController {
     @FXML private Button searchUserButton;
     @FXML private Button invitationsButton;
     @FXML private Button recordButton;
-
+@FXML private Button inviteUserButton;
     private final AppController appController;
     private final ConfigurableApplicationContext springContext;
     private final AudioRecordingService audioService;
@@ -68,19 +68,50 @@ private void initialize() {
     System.out.println("✅ INITIALIZE: MainWindowController is initializing."); // <-- ADD THIS
     chatArea.appendText("¡Bienvenido al Chat!\n");
     channelListView.setCellFactory(listView -> new ConversationCell());
+    inviteUserButton.setDisable(true);
     channelListView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
         if (newSelection != null) {
             this.currentConversation = newSelection;
             chatArea.clear();
             chatArea.appendText("Cargando historial para: " + newSelection.getConversationName() + "...\n");
             appController.solicitarHistorialMensajes(newSelection.getChannelId());
+            inviteUserButton.setDisable(false);
+        }
+        else {
+            inviteUserButton.setDisable(true); // DISABLE the button if no channel is selected
         }
     });
     System.out.println("🚀 INITIALIZE: Requesting channel list..."); // <-- ADD THIS
     appController.solicitarListaCanales();
+    
 }
     
+@FXML
+private void handleInviteUserButtonAction() {
+    if (currentConversation == null) {
+        // Safeguard in case the button is somehow clicked without a channel selected
+        return;
+    }
 
+    try {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/InviteUser.fxml"));
+        fxmlLoader.setControllerFactory(springContext::getBean);
+        Parent parent = fxmlLoader.load();
+
+        // IMPORTANT: Get the new controller and pass the current channel info to it
+        InviteUserController controller = fxmlLoader.getController();
+        controller.setChannelInfo(currentConversation.getChannelId(), currentConversation.getConversationName());
+
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("Invitar Usuario al Canal");
+        stage.setScene(new Scene(parent));
+        stage.showAndWait();
+
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
     @FXML
 private void handleSendButtonAction(ActionEvent event) {
     String message = messageField.getText();

@@ -16,7 +16,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Controller;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.List;
 
 @Controller
 public class AppController {
@@ -100,11 +99,16 @@ public class AppController {
     public void responderInvitacion(int channelId, boolean aceptada) {
         fachada.responderInvitacion(channelId, aceptada);
     }
+    public void invitarUsuario(int channelId, int userIdToInvite) {
+    fachada.invitarUsuario(channelId, userIdToInvite);
+}
 
     public void enviarMensajeAudio(int channelId, String filePath) {
         fachada.enviarMensajeAudio(channelId, filePath);
     }
-
+    public void solicitarListaUsuarios() {
+    fachada.solicitarListaUsuarios();
+}
     public void disconnectFromServer() throws Exception {
         fachada.logout();
         serverConnection.disconnect();

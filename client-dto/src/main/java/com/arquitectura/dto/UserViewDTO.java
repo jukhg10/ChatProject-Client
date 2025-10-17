@@ -5,16 +5,17 @@ package com.arquitectura.dto;
  * It only contains the data the UI needs.
  */
 public class UserViewDTO {
-    private final int id;
+    // FIX: Rename 'id' to 'userId' for clarity and consistency
+    private final int userId; 
     private final String username;
 
-    public UserViewDTO(int id, String username) {
-        this.id = id;
+    public UserViewDTO(int userId, String username) { // <-- Update parameter
+        this.userId = userId; // <-- Update assignment
         this.username = username;
     }
 
-    public int getId() {
-        return id;
+    public int getUserId() {
+        return userId;
     }
 
     public String getUsername() {
@@ -24,7 +25,7 @@ public class UserViewDTO {
     @Override
     public String toString() {
         return "UserViewDTO{" +
-               "id=" + id +
+               "userId=" + userId + // <-- Update for logging
                ", username='" + username + '\'' +
                '}';
     }

@@ -95,7 +95,9 @@ public class ServerListener implements Runnable {
                     List<ChannelViewDTO> invitaciones = gson.fromJson(jsonInvitaciones, invitationListType);
                     networkInputPort.procesarListaDeInvitaciones(invitaciones);
                     break;
-                    
+                    case "ENVIAR_MENSAJE_TEXTO":
+                // No se necesita hacer nada, solo es una confirmación.
+                break;
                 case "OBTENER_MIS_CANALES":
                     String jsonCanales = (parts.length > 2) ? parts[2] : "[]";
                     Type channelListType = new TypeToken<ArrayList<ChannelViewDTO>>(){}.getType();

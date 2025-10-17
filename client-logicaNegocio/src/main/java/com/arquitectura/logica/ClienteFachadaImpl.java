@@ -61,13 +61,8 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
     }
 
     @Override
-    public void crearCanal(String channelName) {
+    public void crearCanalGrupo(String channelName) {
         networkOutputPort.enviarSolicitudCrearCanalGrupo(channelName);
-    }
-
-    @Override
-    public void crearCanalDirecto(int otherUserId) {
-        networkOutputPort.enviarSolicitudCrearCanalDirecto(otherUserId);
     }
 
     @Override
@@ -97,6 +92,7 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
         networkOutputPort.enviarSolicitudResponderInvitacion(channelId, aceptada);
     }
 
+  
     @Override
     public void enviarMensajeAudio(int channelId, String filePath) {
         if (currentUser != null) {
@@ -140,10 +136,7 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
         eventPublisher.publishEvent(new NewChannelEvent(this, channel));
     }
 
-    @Override
-    public void procesarHistorialMensajes(List<MessageViewDTO> messages) {
-        eventPublisher.publishEvent(new MessageHistoryEvent(this, messages));
-    }
+    
 
     @Override
     public void procesarMensajeRecibido(Message message) {
@@ -160,12 +153,15 @@ public class ClienteFachadaImpl implements IClienteFachada, INetworkInputPort {
         );
         eventPublisher.publishEvent(new NewMessageEvent(this, messageDTO));
     }
-
+    
     @Override
     public void procesarListaDeInvitaciones(List<ChannelViewDTO> invitaciones) {
         eventPublisher.publishEvent(new InvitationListUpdateEvent(this, invitaciones));
     }
-
+@Override
+public void procesarHistorialMensajes(int channelId, List<MessageViewDTO> messages) {
+    eventPublisher.publishEvent(new MessageHistoryEvent(this, channelId, messages));
+}
     @Override
     public void procesarMensajeRecibido(MessageViewDTO message) {
         if (currentUser != null) {

@@ -64,18 +64,20 @@ public class MainWindowController {
     }
 
     @FXML
-    private void initialize() {
-        chatArea.appendText("¡Bienvenido al Chat!\n");
-        // Configura la celda personalizada para la lista de conversaciones
-        channelListView.setCellFactory(listView -> new ConversationCell());
-        channelListView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+private void initialize() {
+    System.out.println("✅ INITIALIZE: MainWindowController is initializing."); // <-- ADD THIS
+    chatArea.appendText("¡Bienvenido al Chat!\n");
+    channelListView.setCellFactory(listView -> new ConversationCell());
+    channelListView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
         if (newSelection != null) {
-            this.currentConversation = newSelection; // <-- GUARDAR LA CONVERSACIÓN SELECCIONADA
+            this.currentConversation = newSelection;
             chatArea.clear();
             chatArea.appendText("Cargando historial para: " + newSelection.getConversationName() + "...\n");
             appController.solicitarHistorialMensajes(newSelection.getChannelId());
         }
     });
+    System.out.println("🚀 INITIALIZE: Requesting channel list..."); // <-- ADD THIS
+    appController.solicitarListaCanales();
 }
     
 
@@ -127,14 +129,16 @@ private void handleSearchUserButton() {
 }
 
     @EventListener
-    public void onUserListUpdate(UserListUpdateEvent event) {
-        Platform.runLater(() -> {
-            List<String> usernames = event.getUsers().stream()
-                                          .map(UserViewDTO::getUsername)
-                                          .collect(Collectors.toList());
-            userListView.setItems(FXCollections.observableArrayList(usernames));
-        });
-    }
+public void onUserListUpdate(UserListUpdateEvent event) {
+    // V-- ADD THIS LINE --V
+    System.out.println("🎉 EVENT: onUserListUpdate received with " + event.getUsers().size() + " users.");
+    Platform.runLater(() -> {
+        List<String> usernames = event.getUsers().stream()
+                                      .map(UserViewDTO::getUsername)
+                                      .collect(Collectors.toList());
+        userListView.setItems(FXCollections.observableArrayList(usernames));
+    });
+}
     @FXML
     private void handleInvitationsButtonAction() {
         try {
@@ -228,21 +232,22 @@ private void handleSearchUserButton() {
     }
     
     @EventListener
-    public void onChannelListUpdate(ChannelListUpdateEvent event) {
-        Platform.runLater(() -> {
-            List<ConversationItemDTO> conversations = event.getChannels().stream()
-            .map(channel -> new ConversationItemDTO(
-                channel.getId(), // Add the channel ID
-                "default",
-                channel.getName(),
-                "Último mensaje..."
-            ))
-            .collect(Collectors.toList());
-            
-            channelListView.setItems(FXCollections.observableArrayList(conversations));
-        });
-    }
-
+public void onChannelListUpdate(ChannelListUpdateEvent event) {
+    // V-- ADD THIS LINE --V
+    System.out.println("🎉 EVENT: onChannelListUpdate received with " + event.getChannels().size() + " channels.");
+    Platform.runLater(() -> {
+        List<ConversationItemDTO> conversations = event.getChannels().stream()
+        .map(channel -> new ConversationItemDTO(
+            channel.getId(),
+            "default",
+            channel.getName(),
+            "Último mensaje..."
+        ))
+        .collect(Collectors.toList());
+        
+        channelListView.setItems(FXCollections.observableArrayList(conversations));
+    });
+}
     @EventListener
     public void onHistoryReceived(MessageHistoryEvent event) {
         Platform.runLater(() -> {

@@ -7,8 +7,7 @@ public interface IClienteFachada {
     void logout();
     void solicitarListaUsuarios();
     void solicitarListaCanales();
-    void crearCanal(String channelName);
-    void crearCanalDirecto(int otherUserId);
+    void crearCanalGrupo(String channelName);
     void solicitarHistorialMensajes(int channelId);
     void enviarMensajeTexto(int channelId, String content);
     void invitarUsuario(int channelId, int userIdToInvite);

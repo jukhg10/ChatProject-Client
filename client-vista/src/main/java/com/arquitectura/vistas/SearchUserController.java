@@ -34,21 +34,7 @@ public class SearchUserController {
         ));
     }
 
-    @FXML
-    private void handleStartChatButtonAction() {
-        String selectedUsername = userListView.getSelectionModel().getSelectedItem();
-        if (selectedUsername != null) {
-            // Find the user ID corresponding to the selected username
-            Optional<UserViewDTO> selectedUser = userList.stream()
-                    .filter(user -> user.getUsername().equals(selectedUsername))
-                    .findFirst();
-
-            selectedUser.ifPresent(userViewDTO -> {
-                appController.iniciarChatDirecto(userViewDTO.getId());
-                closeWindow();
-            });
-        }
-    }
+    
 
     private void closeWindow() {
         Stage stage = (Stage) startChatButton.getScene().getWindow();

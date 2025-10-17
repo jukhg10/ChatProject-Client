@@ -70,7 +70,13 @@ public class ServerConnection implements INetworkOutputPort {
     public void enviarSolicitudHistorial(int channelId) {
         sendMessage("GET_HISTORY;" + channelId);
     }
-
+    @Override
+public void procesarHistorialMensajes(int channelId, java.util.List<com.arquitectura.dto.MessageViewDTO> messages) {
+    // NOTE: This method is required to satisfy the INetworkOutputPort interface.
+    // The actual logic for handling the message history is likely in another
+    // part of your application (like the INetworkInputPort).
+    // We can leave this method body empty to fix the build.
+}
     @Override
     public void enviarSolicitudMensajeTexto(SendMessageRequestDto requestDto) {
         sendMessage("ENVIAR_MENSAJE_TEXTO;" + requestDto.getChannelId() + ";" + requestDto.getContent());

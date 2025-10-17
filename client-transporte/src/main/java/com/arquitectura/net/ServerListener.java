@@ -1,18 +1,25 @@
 package com.arquitectura.net;
 import com.arquitectura.dto.MessageViewDTO;
 import com.arquitectura.dto.ChannelViewDTO;
+import com.arquitectura.dto.MessageDTO;
 import com.arquitectura.dto.UserViewDTO;
+import com.arquitectura.dto.events.MessageHistoryEvent;
 import com.arquitectura.logica.ports.INetworkInputPort;
+import com.arquitectura.net.util.LocalDateTimeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 import org.springframework.stereotype.Component;
-
+import com.google.gson.GsonBuilder;
+import java.time.LocalDateTime;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.context.ApplicationEventPublisher; 
+import com.arquitectura.dto.events.MessageHistoryEvent;
+import javax.swing.SwingUtilities;
 
 @Component
 public class ServerListener implements Runnable {
@@ -20,9 +27,17 @@ public class ServerListener implements Runnable {
     private BufferedReader in;
     private volatile boolean running = true;
     private INetworkInputPort networkInputPort;
-    private final Gson gson = new Gson(); // Definimos Gson una sola vez
+    private final Gson gson;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public ServerListener() {}
+    public ServerListener(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+
+        // 2. FIX: Build the Gson object and assign it to the field.
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
+        this.gson = gsonBuilder.create();
+    }
 
     public void setInputStream(BufferedReader in) {
         this.in = in;
@@ -55,7 +70,9 @@ public class ServerListener implements Runnable {
         String[] parts = response.split(";", 4);
         String status = parts[0].toUpperCase();
         String command = (parts.length > 1) ? parts[1].toUpperCase() : "";
-
+        if ("OK".equals(status) && ("OBTENER_USUARIOS".equals(command) || "OBTENER_MIS_CANALES".equals(command))) {
+        System.out.println("🔍 SERVER DATA: Raw data for " + command + " -> " + (parts.length > 2 ? parts[2] : "NO DATA"));
+    }
         if ("OK".equals(status)) {
             switch (command) {
                 case "LOGIN_SUCCESS":
@@ -86,19 +103,25 @@ public class ServerListener implements Runnable {
                     networkInputPort.procesarListaDeCanales(channels);
                     break;
                 
-                case "GET_HISTORY": // <-- NUEVO CASO
-                String jsonMessages = (parts.length > 2) ? parts[2] : "[]";
-                // Usamos MessageViewDTO porque es compatible con la estructura JSON que envía el servidor
-                Type messageListType = new TypeToken<ArrayList<MessageViewDTO>>(){}.getType();
-                List<MessageViewDTO> messages = gson.fromJson(jsonMessages, messageListType);
-                networkInputPort.procesarHistorialMensajes(messages != null ? messages : new ArrayList<>());
-                break;
+                case "GET_HISTORY":
+                    // El formato del servidor es: OK;GET_HISTORY;{channelId};{jsonHistory}
+                    if (parts.length >= 4) {
+                        int channelId = Integer.parseInt(parts[2]); // El channelId es la parte 3
+                        String jsonMessages = parts[3]; // El JSON es la parte 4
+
+                        Type messageListType = new TypeToken<ArrayList<MessageViewDTO>>(){}.getType();
+                        List<MessageViewDTO> messages = gson.fromJson(jsonMessages, messageListType);
+                        
+                        // En lugar de llamar a networkInputPort directamente, publicamos un evento
+                        // para desacoplar las capas.
+                        eventPublisher.publishEvent(new MessageHistoryEvent(this, channelId, messages != null ? messages : new ArrayList<>()));
+                    }
+                    break;
 
                 case "CREAR_CANAL_GRUPO": 
-                if (parts.length > 2) {
-                    String[] channelData = parts[2].split(";", 2);
-                    int channelId = Integer.parseInt(channelData[0]);
-                    String channelName = channelData[1];
+                if (parts.length >= 4) { // We need at least 4 parts: OK, COMMAND, ID, NAME
+                    int channelId = Integer.parseInt(parts[2]);
+                    String channelName = parts[3];
                     ChannelViewDTO newChannel = new ChannelViewDTO(channelId, channelName);
                     networkInputPort.procesarNuevoCanal(newChannel);
                 }

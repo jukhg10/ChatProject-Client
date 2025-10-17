@@ -58,7 +58,7 @@ public class AppController {
         Platform.runLater(() -> {
             showMainWindow();
             fachada.solicitarListaUsuarios();
-            fachada.solicitarListaCanales();
+            
         });
     }
 
@@ -79,15 +79,11 @@ public class AppController {
         }
     }
 
-    public void iniciarChatDirecto(int otherUserId) {
-        System.out.println("CONTROLADOR: Solicitando chat directo con ID '" + otherUserId + "'");
-        fachada.crearCanalDirecto(otherUserId);
-    }
-
-    public void crearCanal(String channelName) {
-        System.out.println("CONTROLADOR: Solicitando crear canal '" + channelName + "'");
-        fachada.crearCanal(channelName);
-    }
+  
+    public void crearCanalGrupo(String channelName) {
+    System.out.println("CONTROLADOR: Solicitando crear canal de grupo '" + channelName + "'");
+    fachada.crearCanalGrupo(channelName);
+}
     
     public void enviarMensaje(int channelId, String content) {
         fachada.enviarMensajeTexto(channelId, content);

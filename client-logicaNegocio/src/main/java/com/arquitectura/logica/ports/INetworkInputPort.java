@@ -15,10 +15,11 @@ public interface INetworkInputPort {
     void procesarMensajeRecibido(Message message);
     void procesarListaDeCanales(List<ChannelViewDTO> channels); // <-- TIPO CAMBIADO
     void procesarNuevoCanal(ChannelViewDTO channel);
-    void procesarHistorialMensajes(List<MessageViewDTO> messages);
     void procesarMensajeRecibido(MessageViewDTO message);
     void procesarListaDeInvitaciones(List<ChannelViewDTO> invitaciones);
     // Métodos para el flujo de login
     void procesarLoginExitoso(int userId, String username);
     void procesarFalloDeLogin(String mensajeError);
+    void procesarHistorialMensajes(int channelId, List<MessageViewDTO> messages);    
+
 }

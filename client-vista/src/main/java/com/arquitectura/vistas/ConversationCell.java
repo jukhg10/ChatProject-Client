@@ -32,29 +32,9 @@ public class ConversationCell extends ListCell<ConversationItemDTO> {
             setText(null);
             setGraphic(null);
         } else {
-            if (fxmlLoader == null) {
-                fxmlLoader = new FXMLLoader(getClass().getResource("/vistas/ConversationCell.fxml"));
-                fxmlLoader.setController(this);
-                try {
-                    fxmlLoader.load();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            nameLabel.setText(item.getConversationName());
-            lastMessageLabel.setText(item.getLastMessage());
-            
-            // Cargar imagen (con una imagen por defecto si falla)
-            try {
-                Image avatar = new Image(item.getImageUrl(), true); // true para cargar en segundo plano
-                avatarImageView.setImage(avatar);
-            } catch (Exception e) {
-                // En caso de URL inválida o error de red, usamos una imagen por defecto
-                avatarImageView.setImage(new Image(getClass().getResourceAsStream("/assets/default_avatar.png")));
-            }
-
-            setGraphic(hBox);
+            // This is the fix:
+            // Use the item's getConversationName() method to set the text.
+            setText(item.getConversationName()); 
         }
     }
 }

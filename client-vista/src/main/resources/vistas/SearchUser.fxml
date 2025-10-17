@@ -18,7 +18,7 @@
             </font>
         </Label>
         <TextField fx:id="usernameField" promptText="Nombre de usuario" />
-        <Button fx:id="searchButton" mnemonicParsing="false" onAction="#handleSearchAction" text="Buscar" />
+        
         <Label fx:id="errorLabel" textFill="RED" />
     </children>
 </VBox>
